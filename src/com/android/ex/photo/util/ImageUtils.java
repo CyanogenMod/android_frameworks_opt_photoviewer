@@ -105,8 +105,6 @@ public class ImageUtils {
             // Do nothing - the photo will appear to be missing
         } catch (IOException exception) {
             // Do nothing - the photo will appear to be missing
-        } catch (IllegalArgumentException exception) {
-            // Do nothing - the photo will appear to be missing
         } finally {
             try {
                 if (inputStream != null) {

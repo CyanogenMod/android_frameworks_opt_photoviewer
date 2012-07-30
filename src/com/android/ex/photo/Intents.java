@@ -128,6 +128,11 @@ public class Intents {
 
         /** Build the intent */
         public Intent build() {
+            if (TextUtils.isEmpty(mPhotosUri) && TextUtils.isEmpty(mResolvedPhotoUri)) {
+                throw new IllegalArgumentException(
+                        "Either PhotosUri or ResolvedPhotoUri must be set.");
+            }
+
             mIntent.setAction(Intent.ACTION_VIEW);
 
             mIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);

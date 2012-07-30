@@ -483,8 +483,4 @@ public class PhotoViewActivity extends Activity implements
 
         return cursor;
     }
-
-    public Cursor getCursor() {
-        return (mAdapter == null) ? null : mAdapter.getCursor();
-    }
 }
