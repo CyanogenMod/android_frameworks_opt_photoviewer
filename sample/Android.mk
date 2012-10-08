@@ -23,9 +23,9 @@ res_dirs := $(photo_dir) res
 include $(CLEAR_VARS)
 
 src_dirs := src
-LOCAL_PACKAGE_NAME := PhotoViewerSample
+LOCAL_PACKAGE_NAME := LibPhotoViewerSample
 
-LOCAL_STATIC_JAVA_LIBRARIES += android-common-photoviewer
+LOCAL_STATIC_JAVA_LIBRARIES += libphotoviewer
 LOCAL_STATIC_JAVA_LIBRARIES += android-common
 LOCAL_STATIC_JAVA_LIBRARIES += android-support-v4
 LOCAL_STATIC_JAVA_LIBRARIES += android-support-v13
