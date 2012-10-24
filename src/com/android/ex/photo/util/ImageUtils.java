@@ -25,7 +25,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
-import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.android.ex.photo.PhotoViewActivity;
