@@ -193,7 +193,7 @@ public class PhotoViewFragment extends Fragment implements
         mPhotoView.setMaxInitialScale(mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1));
         mPhotoView.setOnClickListener(this);
         mPhotoView.setFullScreen(mFullScreen, false);
-        mPhotoView.enableImageTransforms(true);
+        mPhotoView.enableImageTransforms(false);
 
         mPhotoPreviewAndProgress = view.findViewById(R.id.photo_preview);
         mPhotoPreviewImage = (ImageView) view.findViewById(R.id.photo_preview_image);
@@ -277,6 +277,7 @@ public class PhotoViewFragment extends Fragment implements
             case LOADER_ID_PHOTO:
                 if (data != null) {
                     bindPhoto(data);
+                    enableImageTransforms(true);
                     mPhotoPreviewAndProgress.setVisibility(View.GONE);
                     mProgressBarNeeded = false;
                 } else {
@@ -298,6 +299,7 @@ public class PhotoViewFragment extends Fragment implements
                     mPhotoPreviewImage.setImageResource(R.drawable.default_image);
                 } else {
                     bindPhoto(data);
+                    enableImageTransforms(false);
                     getLoaderManager().initLoader(LOADER_ID_PHOTO, null, this);
                 }
                 break;
@@ -321,6 +323,14 @@ public class PhotoViewFragment extends Fragment implements
         if (mPhotoView != null) {
             mPhotoView.bindPhoto(bitmap);
         }
+    }
+
+    /**
+     * Enable or disable image transformations. When transformations are enabled, this view
+     * consumes all touch events.
+     */
+    public void enableImageTransforms(boolean enable) {
+        mPhotoView.enableImageTransforms(enable);
     }
 
     /**
