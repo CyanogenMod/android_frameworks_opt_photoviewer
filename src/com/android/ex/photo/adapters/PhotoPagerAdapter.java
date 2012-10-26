@@ -17,10 +17,9 @@
 
 package com.android.ex.photo.adapters;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.app.Fragment;
 
 import com.android.ex.photo.Intents;
 import com.android.ex.photo.Intents.PhotoViewIntentBuilder;
@@ -36,7 +35,7 @@ public class PhotoPagerAdapter extends BaseCursorPagerAdapter {
     private int mLoadingIndex;
     private final float mMaxScale;
 
-    public PhotoPagerAdapter(Context context, FragmentManager fm, Cursor c, float maxScale) {
+    public PhotoPagerAdapter(Context context, android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
         super(context, fm, c);
         mMaxScale = maxScale;
     }

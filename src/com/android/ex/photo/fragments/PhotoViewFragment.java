@@ -18,15 +18,14 @@
 package com.android.ex.photo.fragments;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.LoaderManager;
-import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Context;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,7 +51,7 @@ import com.android.ex.photo.views.ProgressBarWrapper;
  * Displays a photo.
  */
 public class PhotoViewFragment extends Fragment implements
-        LoaderCallbacks<Bitmap>, OnClickListener, OnScreenListener, CursorChangedListener {
+        LoaderManager.LoaderCallbacks<Bitmap>, OnClickListener, OnScreenListener, CursorChangedListener {
     /**
      * Interface for components that are internally scrollable left-to-right.
      */

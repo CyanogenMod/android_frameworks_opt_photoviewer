@@ -21,15 +21,16 @@ import android.app.ActionBar;
 import android.app.ActionBar.OnMenuVisibilityListener;
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.Fragment;
-import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,8 +48,8 @@ import java.util.Set;
 /**
  * Activity to view the contents of an album.
  */
-public class PhotoViewActivity extends Activity implements
-        LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
+public class PhotoViewActivity extends FragmentActivity implements
+        LoaderManager.LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
         OnMenuVisibilityListener {
 
     /**
@@ -188,7 +189,7 @@ public class PhotoViewActivity extends Activity implements
         setContentView(R.layout.photo_activity_view);
 
         // Create the adapter and add the view pager
-        mAdapter = new PhotoPagerAdapter(this, getFragmentManager(), null, mMaxInitialScale);
+        mAdapter = new PhotoPagerAdapter(this, getSupportFragmentManager(), null, mMaxInitialScale);
 
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
         mViewPager.setAdapter(mAdapter);
@@ -196,7 +197,7 @@ public class PhotoViewActivity extends Activity implements
         mViewPager.setOnInterceptTouchListener(this);
 
         // Kick off the loader
-        getLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
+        getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
 
         final ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -214,7 +215,7 @@ public class PhotoViewActivity extends Activity implements
         mIsPaused = false;
         if (mRestartLoader) {
             mRestartLoader = false;
-            getLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
+            getSupportLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
         }
     }
 
@@ -293,7 +294,7 @@ public class PhotoViewActivity extends Activity implements
             return;
         }
 
-        getLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
+        getSupportLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
     }
 
     @Override
@@ -305,7 +306,7 @@ public class PhotoViewActivity extends Activity implements
     }
 
     @Override
-    public void onLoadFinished(final Loader<Cursor> loader, final Cursor data) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         final int id = loader.getId();
         if (id == LOADER_PHOTO_LIST) {
             if (data == null || data.getCount() == 0) {
@@ -342,6 +343,13 @@ public class PhotoViewActivity extends Activity implements
         }
     }
 
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+        // If the loader is reset, remove the reference in the adapter to this cursor
+        // TODO(pwestbro): reenable this when b/7075236 is fixed
+        // mAdapter.swapCursor(null);
+    }
+
     protected void updateActionItems() {
         // Do nothing, but allow extending classes to do work
     }
@@ -352,13 +360,6 @@ public class PhotoViewActivity extends Activity implements
         for (CursorChangedListener listener : mCursorListeners) {
             listener.onCursorChanged(data);
         }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        // If the loader is reset, remove the reference in the adapter to this cursor
-        // TODO(pwestbro): reenable this when b/7075236 is fixed
-        // mAdapter.swapCursor(null);
     }
 
     @Override
@@ -557,4 +558,5 @@ public class PhotoViewActivity extends Activity implements
     protected void setPhotoIndex(int index) {
         mPhotoIndex = index;
     }
+
 }

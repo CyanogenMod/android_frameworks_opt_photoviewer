@@ -17,11 +17,11 @@
 
 package com.android.ex.photo.loaders;
 
-import android.content.AsyncTaskLoader;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.v4.content.AsyncTaskLoader;
 import android.util.DisplayMetrics;
 
 import com.android.ex.photo.fragments.PhotoViewFragment;
