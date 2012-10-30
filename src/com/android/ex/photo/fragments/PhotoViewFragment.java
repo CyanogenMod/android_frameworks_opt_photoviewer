@@ -37,9 +37,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.ex.photo.Intents;
-import com.android.ex.photo.PhotoViewActivity;
-import com.android.ex.photo.PhotoViewActivity.CursorChangedListener;
-import com.android.ex.photo.PhotoViewActivity.OnScreenListener;
+import com.android.ex.photo.PhotoViewCallbacks;
+import com.android.ex.photo.PhotoViewCallbacks.CursorChangedListener;
+import com.android.ex.photo.PhotoViewCallbacks.OnScreenListener;
 import com.android.ex.photo.R;
 import com.android.ex.photo.adapters.PhotoPagerAdapter;
 import com.android.ex.photo.loaders.PhotoBitmapLoader;
@@ -91,7 +91,7 @@ public class PhotoViewFragment extends Fragment implements
     private String mThumbnailUri;
     /** The intent we were launched with */
     private Intent mIntent;
-    private PhotoViewActivity mCallback;
+    private PhotoViewCallbacks mCallback;
     private PhotoPagerAdapter mAdapter;
 
     private PhotoView mPhotoView;
@@ -131,7 +131,7 @@ public class PhotoViewFragment extends Fragment implements
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mCallback = (PhotoViewActivity) activity;
+        mCallback = (PhotoViewCallbacks) activity;
         if (mCallback == null) {
             throw new IllegalArgumentException(
                     "Activity must be a derived class of PhotoViewActivity");

@@ -50,51 +50,7 @@ import java.util.Set;
  */
 public class PhotoViewActivity extends FragmentActivity implements
         LoaderManager.LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
-        OnMenuVisibilityListener {
-
-    /**
-     * Listener to be invoked for screen events.
-     */
-    public static interface OnScreenListener {
-
-        /**
-         * The full screen state has changed.
-         */
-        public void onFullScreenChanged(boolean fullScreen);
-
-        /**
-         * A new view has been activated and the previous view de-activated.
-         */
-        public void onViewActivated();
-
-        /**
-         * Called when a right-to-left touch move intercept is about to occur.
-         *
-         * @param origX the raw x coordinate of the initial touch
-         * @param origY the raw y coordinate of the initial touch
-         * @return {@code true} if the touch should be intercepted.
-         */
-        public boolean onInterceptMoveLeft(float origX, float origY);
-
-        /**
-         * Called when a left-to-right touch move intercept is about to occur.
-         *
-         * @param origX the raw x coordinate of the initial touch
-         * @param origY the raw y coordinate of the initial touch
-         * @return {@code true} if the touch should be intercepted.
-         */
-        public boolean onInterceptMoveRight(float origX, float origY);
-    }
-
-    public static interface CursorChangedListener {
-        /**
-         * Called when the cursor that contains the photo list data
-         * is updated. Note that there is no guarantee that the cursor
-         * will be at the proper position.
-         * @param cursor the cursor containing the photo list data
-         */
-        public void onCursorChanged(Cursor cursor);
-    }
+        OnMenuVisibilityListener, PhotoViewCallbacks {
 
     private final static String STATE_ITEM_KEY =
             "com.google.android.apps.plus.PhotoViewFragment.ITEM";
@@ -254,22 +210,27 @@ public class PhotoViewActivity extends FragmentActivity implements
        }
     }
 
+    @Override
     public void addScreenListener(OnScreenListener listener) {
         mScreenListeners.add(listener);
     }
 
+    @Override
     public void removeScreenListener(OnScreenListener listener) {
         mScreenListeners.remove(listener);
     }
 
+    @Override
     public synchronized void addCursorListener(CursorChangedListener listener) {
         mCursorListeners.add(listener);
     }
 
+    @Override
     public synchronized void removeCursorListener(CursorChangedListener listener) {
         mCursorListeners.remove(listener);
     }
 
+    @Override
     public boolean isFragmentFullScreen(Fragment fragment) {
         if (mViewPager == null || mAdapter == null || mAdapter.getCount() == 0) {
             return mFullScreen;
@@ -277,6 +238,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         return mFullScreen || (mViewPager.getCurrentItem() != mAdapter.getItemPosition(fragment));
     }
 
+    @Override
     public void toggleFullScreen() {
         setFullScreen(!mFullScreen, true);
     }
@@ -376,6 +338,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     public void onPageScrollStateChanged(int state) {
     }
 
+    @Override
     public boolean isFragmentActive(Fragment fragment) {
         if (mViewPager == null || mAdapter == null) {
             return false;
@@ -479,6 +442,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
     };
 
+    @Override
     public void setViewActivated() {
         for (OnScreenListener listener : mScreenListeners) {
             listener.onViewActivated();
