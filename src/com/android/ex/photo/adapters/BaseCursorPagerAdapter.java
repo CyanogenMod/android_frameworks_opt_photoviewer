@@ -37,13 +37,13 @@ import java.util.HashMap;
 public abstract class BaseCursorPagerAdapter extends BaseFragmentPagerAdapter {
     private static final String TAG = "BaseCursorPagerAdapter";
 
-    Context mContext;
-    private Cursor mCursor;
-    private int mRowIDColumn;
+    protected Context mContext;
+    protected Cursor mCursor;
+    protected int mRowIDColumn;
     /** Mapping of row ID to cursor position */
-    private SparseIntArray mItemPosition;
+    protected SparseIntArray mItemPosition;
     /** Mapping of instantiated object to row ID */
-    private final HashMap<Object, Integer> mObjectRowMap = new HashMap<Object, Integer>();
+    protected final HashMap<Object, Integer> mObjectRowMap = new HashMap<Object, Integer>();
 
     /**
      * Constructor that always enables auto-requery.

@@ -76,42 +76,42 @@ public class PhotoViewFragment extends Fragment implements
         public boolean interceptMoveRight(float origX, float origY);
     }
 
-    private final static String STATE_INTENT_KEY =
+    protected final static String STATE_INTENT_KEY =
             "com.android.mail.photo.fragments.PhotoViewFragment.INTENT";
 
     // Loader IDs
-    private final static int LOADER_ID_PHOTO = 1;
-    private final static int LOADER_ID_THUMBNAIL = 2;
+     final static int LOADER_ID_PHOTO = 1;
+     final static int LOADER_ID_THUMBNAIL = 2;
 
     /** The size of the photo */
     public static Integer sPhotoSize;
 
     /** The URL of a photo to display */
-    private String mResolvedPhotoUri;
-    private String mThumbnailUri;
+    protected String mResolvedPhotoUri;
+    protected String mThumbnailUri;
     /** The intent we were launched with */
-    private Intent mIntent;
-    private PhotoViewCallbacks mCallback;
-    private PhotoPagerAdapter mAdapter;
+    protected Intent mIntent;
+    protected PhotoViewCallbacks mCallback;
+    protected PhotoPagerAdapter mAdapter;
 
-    private PhotoView mPhotoView;
-    private ImageView mPhotoPreviewImage;
-    private TextView mEmptyText;
-    private ImageView mRetryButton;
-    private ProgressBarWrapper mPhotoProgressBar;
+    protected PhotoView mPhotoView;
+    protected ImageView mPhotoPreviewImage;
+    protected TextView mEmptyText;
+    protected ImageView mRetryButton;
+    protected ProgressBarWrapper mPhotoProgressBar;
 
-    private final int mPosition;
+    protected final int mPosition;
 
     /** Whether or not the fragment should make the photo full-screen */
-    private boolean mFullScreen;
+    protected boolean mFullScreen;
 
     /** Whether or not this fragment will only show the loading spinner */
-    private final boolean mOnlyShowSpinner;
+    protected final boolean mOnlyShowSpinner;
 
     /** Whether or not the progress bar is showing valid information about the progress stated */
-    private boolean mProgressBarNeeded = true;
+    protected boolean mProgressBarNeeded = true;
 
-    private View mPhotoPreviewAndProgress;
+    protected View mPhotoPreviewAndProgress;
 
     public PhotoViewFragment() {
         mPosition = -1;
