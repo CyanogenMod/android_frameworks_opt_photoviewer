@@ -80,8 +80,8 @@ public class PhotoViewFragment extends Fragment implements
             "com.android.mail.photo.fragments.PhotoViewFragment.INTENT";
 
     // Loader IDs
-     final static int LOADER_ID_PHOTO = 1;
-     final static int LOADER_ID_THUMBNAIL = 2;
+    protected final static int LOADER_ID_PHOTO = 1;
+    protected final static int LOADER_ID_THUMBNAIL = 2;
 
     /** The size of the photo */
     public static Integer sPhotoSize;
