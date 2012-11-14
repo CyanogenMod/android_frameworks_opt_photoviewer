@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -282,7 +283,14 @@ public class PhotoViewFragment extends Fragment implements
                 } else {
                     // Received a null result for the full size image.  Instead attempt to load the
                     // thumbnail
-                    getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null, this);
+                    Handler handler = new Handler();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null,
+                                                          PhotoViewFragment.this);
+                        }
+                    });
                 }
                 break;
             case LOADER_ID_THUMBNAIL:
