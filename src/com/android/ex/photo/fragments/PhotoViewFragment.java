@@ -307,7 +307,14 @@ public class PhotoViewFragment extends Fragment implements
                 } else {
                     bindPhoto(data);
                     enableImageTransforms(false);
-                    getLoaderManager().initLoader(LOADER_ID_PHOTO, null, this);
+                    Handler handler = new Handler();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            getLoaderManager().initLoader(LOADER_ID_PHOTO, null,
+                                PhotoViewFragment.this);
+                        }
+                    });
                 }
                 break;
             default:
