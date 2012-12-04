@@ -18,15 +18,15 @@
 package com.android.ex.photo.fragments;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.LoaderManager;
-import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Context;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,9 +38,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.ex.photo.Intents;
-import com.android.ex.photo.PhotoViewActivity;
-import com.android.ex.photo.PhotoViewActivity.CursorChangedListener;
-import com.android.ex.photo.PhotoViewActivity.OnScreenListener;
+import com.android.ex.photo.PhotoViewCallbacks;
+import com.android.ex.photo.PhotoViewCallbacks.CursorChangedListener;
+import com.android.ex.photo.PhotoViewCallbacks.OnScreenListener;
 import com.android.ex.photo.R;
 import com.android.ex.photo.adapters.PhotoPagerAdapter;
 import com.android.ex.photo.loaders.PhotoBitmapLoader;
@@ -52,7 +52,7 @@ import com.android.ex.photo.views.ProgressBarWrapper;
  * Displays a photo.
  */
 public class PhotoViewFragment extends Fragment implements
-        LoaderCallbacks<Bitmap>, OnClickListener, OnScreenListener, CursorChangedListener {
+        LoaderManager.LoaderCallbacks<Bitmap>, OnClickListener, OnScreenListener, CursorChangedListener {
     /**
      * Interface for components that are internally scrollable left-to-right.
      */
@@ -77,42 +77,42 @@ public class PhotoViewFragment extends Fragment implements
         public boolean interceptMoveRight(float origX, float origY);
     }
 
-    private final static String STATE_INTENT_KEY =
+    protected final static String STATE_INTENT_KEY =
             "com.android.mail.photo.fragments.PhotoViewFragment.INTENT";
 
     // Loader IDs
-    private final static int LOADER_ID_PHOTO = 1;
-    private final static int LOADER_ID_THUMBNAIL = 2;
+    protected final static int LOADER_ID_PHOTO = 1;
+    protected final static int LOADER_ID_THUMBNAIL = 2;
 
     /** The size of the photo */
     public static Integer sPhotoSize;
 
     /** The URL of a photo to display */
-    private String mResolvedPhotoUri;
-    private String mThumbnailUri;
+    protected String mResolvedPhotoUri;
+    protected String mThumbnailUri;
     /** The intent we were launched with */
-    private Intent mIntent;
-    private PhotoViewActivity mCallback;
-    private PhotoPagerAdapter mAdapter;
+    protected Intent mIntent;
+    protected PhotoViewCallbacks mCallback;
+    protected PhotoPagerAdapter mAdapter;
 
-    private PhotoView mPhotoView;
-    private ImageView mPhotoPreviewImage;
-    private TextView mEmptyText;
-    private ImageView mRetryButton;
-    private ProgressBarWrapper mPhotoProgressBar;
+    protected PhotoView mPhotoView;
+    protected ImageView mPhotoPreviewImage;
+    protected TextView mEmptyText;
+    protected ImageView mRetryButton;
+    protected ProgressBarWrapper mPhotoProgressBar;
 
-    private final int mPosition;
+    protected final int mPosition;
 
     /** Whether or not the fragment should make the photo full-screen */
-    private boolean mFullScreen;
+    protected boolean mFullScreen;
 
     /** Whether or not this fragment will only show the loading spinner */
-    private final boolean mOnlyShowSpinner;
+    protected final boolean mOnlyShowSpinner;
 
     /** Whether or not the progress bar is showing valid information about the progress stated */
-    private boolean mProgressBarNeeded = true;
+    protected boolean mProgressBarNeeded = true;
 
-    private View mPhotoPreviewAndProgress;
+    protected View mPhotoPreviewAndProgress;
 
     public PhotoViewFragment() {
         mPosition = -1;
@@ -132,7 +132,7 @@ public class PhotoViewFragment extends Fragment implements
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mCallback = (PhotoViewActivity) activity;
+        mCallback = (PhotoViewCallbacks) activity;
         if (mCallback == null) {
             throw new IllegalArgumentException(
                     "Activity must be a derived class of PhotoViewActivity");
@@ -193,7 +193,7 @@ public class PhotoViewFragment extends Fragment implements
         mPhotoView.setMaxInitialScale(mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1));
         mPhotoView.setOnClickListener(this);
         mPhotoView.setFullScreen(mFullScreen, false);
-        mPhotoView.enableImageTransforms(true);
+        mPhotoView.enableImageTransforms(false);
 
         mPhotoPreviewAndProgress = view.findViewById(R.id.photo_preview);
         mPhotoPreviewImage = (ImageView) view.findViewById(R.id.photo_preview_image);
@@ -277,12 +277,20 @@ public class PhotoViewFragment extends Fragment implements
             case LOADER_ID_PHOTO:
                 if (data != null) {
                     bindPhoto(data);
+                    enableImageTransforms(true);
                     mPhotoPreviewAndProgress.setVisibility(View.GONE);
                     mProgressBarNeeded = false;
                 } else {
                     // Received a null result for the full size image.  Instead attempt to load the
                     // thumbnail
-                    getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null, this);
+                    Handler handler = new Handler();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null,
+                                                          PhotoViewFragment.this);
+                        }
+                    });
                 }
                 break;
             case LOADER_ID_THUMBNAIL:
@@ -298,7 +306,15 @@ public class PhotoViewFragment extends Fragment implements
                     mPhotoPreviewImage.setImageResource(R.drawable.default_image);
                 } else {
                     bindPhoto(data);
-                    getLoaderManager().initLoader(LOADER_ID_PHOTO, null, this);
+                    enableImageTransforms(false);
+                    Handler handler = new Handler();
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            getLoaderManager().initLoader(LOADER_ID_PHOTO, null,
+                                PhotoViewFragment.this);
+                        }
+                    });
                 }
                 break;
             default:
@@ -321,6 +337,14 @@ public class PhotoViewFragment extends Fragment implements
         if (mPhotoView != null) {
             mPhotoView.bindPhoto(bitmap);
         }
+    }
+
+    /**
+     * Enable or disable image transformations. When transformations are enabled, this view
+     * consumes all touch events.
+     */
+    public void enableImageTransforms(boolean enable) {
+        mPhotoView.enableImageTransforms(enable);
     }
 
     /**

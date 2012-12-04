@@ -18,7 +18,6 @@
 package com.android.ex.photo.views;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -72,9 +71,6 @@ public class PhotoView extends View implements OnGestureListener,
     private static Bitmap sVideoImage;
     /** Video icon */
     private static Bitmap sVideoNotReadyImage;
-
-    // Features
-    private static boolean sHasMultitouchDistinct;
 
     // Paints
     /** Paint to partially dim the photo during crop */
