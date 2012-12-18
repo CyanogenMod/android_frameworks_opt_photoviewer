@@ -21,6 +21,7 @@ import android.app.ActionBar;
 import android.app.ActionBar.OnMenuVisibilityListener;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -32,6 +33,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -69,6 +71,8 @@ public class PhotoViewActivity extends FragmentActivity implements
 
     /** The URI of the photos we're viewing; may be {@code null} */
     private String mPhotosUri;
+    /** The URI of the initial photo to display */
+    private String mInitialPhotoUri;
     /** The index of the currently viewed photo */
     private int mPhotoIndex;
     /** The query projection to use; may be {@code null} */
@@ -77,10 +81,12 @@ public class PhotoViewActivity extends FragmentActivity implements
     private int mAlbumCount = ALBUM_COUNT_UNKNOWN;
     /** {@code true} if the view is empty. Otherwise, {@code false}. */
     private boolean mIsEmpty;
+    /** the main root view */
+    protected View mRootView;
     /** The main pager; provides left/right swipe between photos */
-    private PhotoViewPager mViewPager;
+    protected PhotoViewPager mViewPager;
     /** Adapter to create pager views */
-    private PhotoPagerAdapter mAdapter;
+    protected PhotoPagerAdapter mAdapter;
     /** Whether or not we're in "full screen" mode */
     private boolean mFullScreen;
     /** The set of listeners wanting full screen state */
@@ -101,6 +107,11 @@ public class PhotoViewActivity extends FragmentActivity implements
     // track the loading by this variable which is fragile and may cause phantom "loading..."
     // text.
     private long mActionBarHideDelayTime;
+
+    protected PhotoPagerAdapter createPhotoPagerAdapter(Context context,
+            android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
+        return new PhotoPagerAdapter(context, fm, c, maxScale);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +147,9 @@ public class PhotoViewActivity extends FragmentActivity implements
         if (mIntent.hasExtra(Intents.EXTRA_PHOTO_INDEX) && currentItem < 0) {
             currentItem = mIntent.getIntExtra(Intents.EXTRA_PHOTO_INDEX, -1);
         }
+        if (mIntent.hasExtra(Intents.EXTRA_INITIAL_PHOTO_URI) && currentItem < 0) {
+            mInitialPhotoUri = mIntent.getStringExtra(Intents.EXTRA_INITIAL_PHOTO_URI);
+        }
 
         // Set the max initial scale, defaulting to 1x
         mMaxInitialScale = mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1.0f);
@@ -145,10 +159,10 @@ public class PhotoViewActivity extends FragmentActivity implements
         setContentView(R.layout.photo_activity_view);
 
         // Create the adapter and add the view pager
-        mAdapter = new PhotoPagerAdapter(this, getSupportFragmentManager(), null, mMaxInitialScale);
-
+        mAdapter = createPhotoPagerAdapter(this, getSupportFragmentManager(),
+            null, mMaxInitialScale);
+        mRootView = findViewById(R.id.photo_activity_root_view);
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
-        mViewPager.setAdapter(mAdapter);
         mViewPager.setOnPageChangeListener(this);
         mViewPager.setOnInterceptTouchListener(this);
 
@@ -156,11 +170,13 @@ public class PhotoViewActivity extends FragmentActivity implements
         getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
 
         final ActionBar actionBar = getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        mActionBarHideDelayTime = getResources().getInteger(
-                R.integer.action_bar_delay_time_in_millis);
-        actionBar.addOnMenuVisibilityListener(this);
-        actionBar.setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE);
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            mActionBarHideDelayTime = getResources().getInteger(
+                    R.integer.action_bar_delay_time_in_millis);
+            actionBar.addOnMenuVisibilityListener(this);
+            actionBar.setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE);
+        }
     }
 
     @Override
@@ -276,6 +292,20 @@ public class PhotoViewActivity extends FragmentActivity implements
             } else {
                 mAlbumCount = data.getCount();
 
+                if (mInitialPhotoUri != null) {
+                    int index = 0;
+                    int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
+                    while (data.moveToNext()) {
+                        String uri = data.getString(uriIndex);
+                        if (TextUtils.equals(uri, mInitialPhotoUri)) {
+                            mInitialPhotoUri = null;
+                            mPhotoIndex = index;
+                            break;
+                        }
+                        index++;
+                    }
+                }
+
                 // We're paused; don't do anything now, we'll get re-invoked
                 // when the activity becomes active again
                 // TODO(pwestbro): This shouldn't be necessary, as the loader manager should
@@ -287,6 +317,9 @@ public class PhotoViewActivity extends FragmentActivity implements
                 mIsEmpty = false;
 
                 mAdapter.swapCursor(data);
+                if (mViewPager.getAdapter() == null) {
+                    mViewPager.setAdapter(mAdapter);
+                }
                 notifyCursorListeners(data);
 
                 // set the selected photo
@@ -346,6 +379,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         return mViewPager.getCurrentItem() == mAdapter.getItemPosition(fragment);
     }
 
+    @Override
     public void onFragmentVisible(PhotoViewFragment fragment) {
         updateActionBar(fragment);
     }
