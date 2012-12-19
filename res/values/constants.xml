@@ -17,5 +17,5 @@
 -->
 
 <resources>
-    <integer name="action_bar_delay_time_in_millis">5000</integer>
+    <integer name="reenter_fullscreen_delay_time_in_millis">5000</integer>
 </resources>

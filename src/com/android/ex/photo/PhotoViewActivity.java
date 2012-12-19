@@ -107,7 +107,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     // by the activity, but, that gets tricky when it comes to screen rotation. For now, we
     // track the loading by this variable which is fragile and may cause phantom "loading..."
     // text.
-    private long mActionBarHideDelayTime;
+    private long mEnterFullScreenDelayTime;
 
     protected PhotoPagerAdapter createPhotoPagerAdapter(Context context,
             android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
@@ -172,11 +172,12 @@ public class PhotoViewActivity extends FragmentActivity implements
         // Kick off the loader
         getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
 
+        mEnterFullScreenDelayTime =
+                resources.getInteger(R.integer.reenter_fullscreen_delay_time_in_millis);
+
         final ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            mActionBarHideDelayTime =
-                    resources.getInteger(R.integer.action_bar_delay_time_in_millis);
             actionBar.addOnMenuVisibilityListener(this);
             actionBar.setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE);
         }
@@ -422,11 +423,11 @@ public class PhotoViewActivity extends FragmentActivity implements
 
         if (mFullScreen) {
             setLightsOutMode(true);
-            cancelActionBarHideRunnable();
+            cancelEnterFullScreenRunnable();
         } else {
             setLightsOutMode(false);
             if (setDelayedRunnable) {
-                postActionBarHideRunnableWithDelay();
+                postEnterFullScreenRunnableWithDelay();
             }
         }
 
@@ -437,13 +438,12 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
     }
 
-    private void postActionBarHideRunnableWithDelay() {
-        mHandler.postDelayed(mActionBarHideRunnable,
-                mActionBarHideDelayTime);
+    private void postEnterFullScreenRunnableWithDelay() {
+        mHandler.postDelayed(mEnterFullScreenRunnable, mEnterFullScreenDelayTime);
     }
 
-    private void cancelActionBarHideRunnable() {
-        mHandler.removeCallbacks(mActionBarHideRunnable);
+    private void cancelEnterFullScreenRunnable() {
+        mHandler.removeCallbacks(mEnterFullScreenRunnable);
     }
 
     protected void setLightsOutMode(boolean enabled) {
@@ -472,7 +472,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
     }
 
-    private Runnable mActionBarHideRunnable = new Runnable() {
+    private Runnable mEnterFullScreenRunnable = new Runnable() {
         @Override
         public void run() {
             setFullScreen(true, true);
@@ -546,9 +546,9 @@ public class PhotoViewActivity extends FragmentActivity implements
     @Override
     public void onMenuVisibilityChanged(boolean isVisible) {
         if (isVisible) {
-            cancelActionBarHideRunnable();
+            cancelEnterFullScreenRunnable();
         } else {
-            postActionBarHideRunnableWithDelay();
+            postEnterFullScreenRunnableWithDelay();
         }
     }
 
