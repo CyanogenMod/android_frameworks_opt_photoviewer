@@ -328,7 +328,9 @@ public class PhotoViewFragment extends Fragment implements
             mPhotoProgressBar.setVisibility(View.GONE);
         }
 
-        mCallback.setViewActivated();
+        if (data != null) {
+            mCallback.onNewPhotoLoaded();
+        }
         setViewVisibility();
     }
 

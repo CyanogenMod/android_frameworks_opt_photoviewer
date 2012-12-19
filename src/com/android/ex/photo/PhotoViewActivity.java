@@ -551,6 +551,10 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
     }
 
+    public void onNewPhotoLoaded() {
+        setViewActivated();
+    }
+
     protected boolean isFullScreen() {
         return mFullScreen;
     }
