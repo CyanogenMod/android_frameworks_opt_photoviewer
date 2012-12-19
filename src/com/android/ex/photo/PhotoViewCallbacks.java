@@ -60,6 +60,8 @@ public interface PhotoViewCallbacks {
 
     public void setViewActivated();
 
+    public void onNewPhotoLoaded();
+
     public void toggleFullScreen();
 
     public boolean isFragmentActive(Fragment fragment);
