@@ -188,7 +188,11 @@ public class PhotoViewFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.photo_fragment_view, container, false);
+        initializeView(view);
+        return view;
+    }
 
+    protected void initializeView(View view) {
         mPhotoView = (PhotoView) view.findViewById(R.id.photo_view);
         mPhotoView.setMaxInitialScale(mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1));
         mPhotoView.setOnClickListener(this);
@@ -207,8 +211,6 @@ public class PhotoViewFragment extends Fragment implements
 
         // Don't call until we've setup the entire view
         setViewVisibility();
-
-        return view;
     }
 
     @Override
