@@ -381,6 +381,10 @@ public class PhotoViewFragment extends Fragment implements
             // we're not in the foreground; reset our view
             resetViews();
         } else {
+            if (!isPhotoBound()) {
+                // Restart the loader
+                getLoaderManager().restartLoader(LOADER_ID_THUMBNAIL, null, this);
+            }
             mCallback.onFragmentVisible(this);
         }
     }
