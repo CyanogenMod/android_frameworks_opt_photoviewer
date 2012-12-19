@@ -161,10 +161,12 @@ public class PhotoViewActivity extends FragmentActivity implements
         // Create the adapter and add the view pager
         mAdapter = createPhotoPagerAdapter(this, getSupportFragmentManager(),
             null, mMaxInitialScale);
+        final Resources resources = getResources();
         mRootView = findViewById(R.id.photo_activity_root_view);
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
         mViewPager.setOnPageChangeListener(this);
         mViewPager.setOnInterceptTouchListener(this);
+        mViewPager.setPageMargin(resources.getDimensionPixelSize(R.dimen.photo_page_margin));
 
         // Kick off the loader
         getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
@@ -172,8 +174,8 @@ public class PhotoViewActivity extends FragmentActivity implements
         final ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            mActionBarHideDelayTime = getResources().getInteger(
-                    R.integer.action_bar_delay_time_in_millis);
+            mActionBarHideDelayTime =
+                    resources.getInteger(R.integer.action_bar_delay_time_in_millis);
             actionBar.addOnMenuVisibilityListener(this);
             actionBar.setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE);
         }
