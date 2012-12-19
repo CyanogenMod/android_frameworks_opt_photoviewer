@@ -306,6 +306,7 @@ public class PhotoViewFragment extends Fragment implements
                     // no preview, show default
                     mPhotoPreviewImage.setVisibility(View.VISIBLE);
                     mPhotoPreviewImage.setImageResource(R.drawable.default_image);
+                    mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
                 } else {
                     bindPhoto(data);
                     enableImageTransforms(false);
