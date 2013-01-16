@@ -276,48 +276,43 @@ public class PhotoViewFragment extends Fragment implements
 
         final int id = loader.getId();
         switch (id) {
+            case LOADER_ID_THUMBNAIL:
+                if (isPhotoBound()) {
+                    // There is need to do anything with the thumbnail image, as the full size
+                    // image is being shown.
+                    mProgressBarNeeded = false;
+                    mPhotoPreviewAndProgress.setVisibility(View.GONE);
+                    return;
+                }
+
+                if (data == null) {
+                    // no preview, show default
+                    mPhotoPreviewImage.setImageResource(R.drawable.default_image);
+                } else {
+                    // show preview
+                    mPhotoPreviewImage.setImageBitmap(data);
+                }
+                mPhotoPreviewImage.setVisibility(View.VISIBLE);
+                mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
+                enableImageTransforms(false);
+                mPhotoProgressBar.setIndeterminate(true);
+                mProgressBarNeeded = true;
+
+                Handler handler = new Handler();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        getLoaderManager().initLoader(LOADER_ID_PHOTO, null,
+                            PhotoViewFragment.this);
+                    }
+                });
+                break;
             case LOADER_ID_PHOTO:
                 if (data != null) {
                     bindPhoto(data);
                     enableImageTransforms(true);
                     mPhotoPreviewAndProgress.setVisibility(View.GONE);
                     mProgressBarNeeded = false;
-                } else {
-                    // Received a null result for the full size image.  Instead attempt to load the
-                    // thumbnail
-                    Handler handler = new Handler();
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null,
-                                                          PhotoViewFragment.this);
-                        }
-                    });
-                }
-                break;
-            case LOADER_ID_THUMBNAIL:
-                mProgressBarNeeded = false;
-                if (isPhotoBound()) {
-                    // There is need to do anything with the thumbnail image, as the full size
-                    // image is being shown.
-                    mPhotoPreviewAndProgress.setVisibility(View.GONE);
-                    return;
-                } else if (data == null) {
-                    // no preview, show default
-                    mPhotoPreviewImage.setVisibility(View.VISIBLE);
-                    mPhotoPreviewImage.setImageResource(R.drawable.default_image);
-                    mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
-                } else {
-                    bindPhoto(data);
-                    enableImageTransforms(false);
-                    Handler handler = new Handler();
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            getLoaderManager().initLoader(LOADER_ID_PHOTO, null,
-                                PhotoViewFragment.this);
-                        }
-                    });
                 }
                 break;
             default:
