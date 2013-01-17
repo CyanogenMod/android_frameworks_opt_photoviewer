@@ -552,6 +552,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
     }
 
+    @Override
     public void onNewPhotoLoaded() {
         setViewActivated();
     }
@@ -564,4 +565,8 @@ public class PhotoViewActivity extends FragmentActivity implements
         mPhotoIndex = index;
     }
 
+    @Override
+    public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor) {
+        // do nothing
+    }
 }

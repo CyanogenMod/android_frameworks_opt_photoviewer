@@ -69,4 +69,6 @@ public interface PhotoViewCallbacks {
     public void onFragmentVisible(PhotoViewFragment fragment);
 
     public boolean isFragmentFullScreen(Fragment fragment);
+
+    public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor);
 }

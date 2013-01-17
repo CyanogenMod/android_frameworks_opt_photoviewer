@@ -23,7 +23,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -215,21 +214,26 @@ public class PhotoViewFragment extends Fragment implements
 
     @Override
     public void onResume() {
+        super.onResume();
         mCallback.addScreenListener(this);
         mCallback.addCursorListener(this);
 
-        getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null, this);
+        if (!isPhotoBound()) {
+            mProgressBarNeeded = true;
+            mPhotoPreviewAndProgress.setVisibility(View.VISIBLE);
 
-        super.onResume();
+            getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null, this);
+            getLoaderManager().initLoader(LOADER_ID_PHOTO, null, this);
+        }
     }
 
     @Override
     public void onPause() {
-        super.onPause();
         // Remove listeners
         mCallback.removeCursorListener(this);
         mCallback.removeScreenListener(this);
         resetPhotoView();
+        super.onPause();
     }
 
     @Override
@@ -239,7 +243,6 @@ public class PhotoViewFragment extends Fragment implements
             mPhotoView.clear();
             mPhotoView = null;
         }
-
         super.onDestroyView();
     }
 
@@ -274,14 +277,15 @@ public class PhotoViewFragment extends Fragment implements
             return;
         }
 
+        // both loaders are started together, they may finish loading in such a
+        // way that the thumbnail is displayed on top of the full image
         final int id = loader.getId();
         switch (id) {
             case LOADER_ID_THUMBNAIL:
                 if (isPhotoBound()) {
-                    // There is need to do anything with the thumbnail image, as the full size
+                    // There is need to do anything with the thumbnail
+                    // image, as the full size
                     // image is being shown.
-                    mProgressBarNeeded = false;
-                    mPhotoPreviewAndProgress.setVisibility(View.GONE);
                     return;
                 }
 
@@ -295,25 +299,9 @@ public class PhotoViewFragment extends Fragment implements
                 mPhotoPreviewImage.setVisibility(View.VISIBLE);
                 mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
                 enableImageTransforms(false);
-                mPhotoProgressBar.setIndeterminate(true);
-                mProgressBarNeeded = true;
-
-                Handler handler = new Handler();
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        getLoaderManager().initLoader(LOADER_ID_PHOTO, null,
-                            PhotoViewFragment.this);
-                    }
-                });
                 break;
             case LOADER_ID_PHOTO:
-                if (data != null) {
-                    bindPhoto(data);
-                    enableImageTransforms(true);
-                    mPhotoPreviewAndProgress.setVisibility(View.GONE);
-                    mProgressBarNeeded = false;
-                }
+                bindPhoto(data);
                 break;
             default:
                 break;
@@ -334,8 +322,13 @@ public class PhotoViewFragment extends Fragment implements
      * Binds an image to the photo view.
      */
     private void bindPhoto(Bitmap bitmap) {
-        if (mPhotoView != null) {
-            mPhotoView.bindPhoto(bitmap);
+        if (bitmap != null) {
+            if (mPhotoView != null) {
+                mPhotoView.bindPhoto(bitmap);
+            }
+            enableImageTransforms(true);
+            mPhotoPreviewAndProgress.setVisibility(View.GONE);
+            mProgressBarNeeded = false;
         }
     }
 
@@ -441,6 +434,8 @@ public class PhotoViewFragment extends Fragment implements
     @Override
     public void onCursorChanged(Cursor cursor) {
         if (cursor.moveToPosition(mPosition) && !isPhotoBound()) {
+            mCallback.onCursorChanged(this, cursor);
+
             final LoaderManager manager = getLoaderManager();
             final Loader<Bitmap> fakeLoader = manager.getLoader(LOADER_ID_PHOTO);
             if (fakeLoader == null) {
