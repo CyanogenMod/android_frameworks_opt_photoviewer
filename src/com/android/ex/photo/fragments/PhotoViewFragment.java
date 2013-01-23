@@ -215,7 +215,7 @@ public class PhotoViewFragment extends Fragment implements
     @Override
     public void onResume() {
         super.onResume();
-        mCallback.addScreenListener(this);
+        mCallback.addScreenListener(mPosition, this);
         mCallback.addCursorListener(this);
 
         if (!isPhotoBound()) {
@@ -231,7 +231,7 @@ public class PhotoViewFragment extends Fragment implements
     public void onPause() {
         // Remove listeners
         mCallback.removeCursorListener(this);
-        mCallback.removeScreenListener(this);
+        mCallback.removeScreenListener(mPosition);
         resetPhotoView();
         super.onPause();
     }
@@ -313,7 +313,7 @@ public class PhotoViewFragment extends Fragment implements
         }
 
         if (data != null) {
-            mCallback.onNewPhotoLoaded();
+            mCallback.onNewPhotoLoaded(mPosition);
         }
         setViewVisibility();
     }

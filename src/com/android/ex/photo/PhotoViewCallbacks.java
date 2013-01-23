@@ -50,17 +50,17 @@ public interface PhotoViewCallbacks {
         public void onCursorChanged(Cursor cursor);
     }
 
-    public void addScreenListener(OnScreenListener listener);
+    public void addScreenListener(int position, OnScreenListener listener);
 
-    public void removeScreenListener(OnScreenListener listener);
+    public void removeScreenListener(int position);
 
     public void addCursorListener(CursorChangedListener listener);
 
     public void removeCursorListener(CursorChangedListener listener);
 
-    public void setViewActivated();
+    public void setViewActivated(int position);
 
-    public void onNewPhotoLoaded();
+    public void onNewPhotoLoaded(int position);
 
     public void toggleFullScreen();
 

@@ -45,7 +45,9 @@ import com.android.ex.photo.fragments.PhotoViewFragment;
 import com.android.ex.photo.loaders.PhotoPagerLoader;
 import com.android.ex.photo.provider.PhotoContract;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -90,8 +92,9 @@ public class PhotoViewActivity extends FragmentActivity implements
     protected PhotoPagerAdapter mAdapter;
     /** Whether or not we're in "full screen" mode */
     private boolean mFullScreen;
-    /** The set of listeners wanting full screen state */
-    private Set<OnScreenListener> mScreenListeners = new HashSet<OnScreenListener>();
+    /** The listeners wanting full screen state for each screen position */
+    private Map<Integer, OnScreenListener>
+            mScreenListeners = new HashMap<Integer, OnScreenListener>();
     /** The set of listeners wanting full screen state */
     private Set<CursorChangedListener> mCursorListeners = new HashSet<CursorChangedListener>();
     /** When {@code true}, restart the loader when the activity becomes active */
@@ -156,6 +159,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         mMaxInitialScale = mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1.0f);
 
         mPhotoIndex = currentItem;
+        mIsEmpty = true;
 
         setContentView(R.layout.photo_activity_view);
 
@@ -231,13 +235,13 @@ public class PhotoViewActivity extends FragmentActivity implements
     }
 
     @Override
-    public void addScreenListener(OnScreenListener listener) {
-        mScreenListeners.add(listener);
+    public void addScreenListener(int position, OnScreenListener listener) {
+        mScreenListeners.put(position, listener);
     }
 
     @Override
-    public void removeScreenListener(OnScreenListener listener) {
-        mScreenListeners.remove(listener);
+    public void removeScreenListener(int position) {
+        mScreenListeners.remove(position);
     }
 
     @Override
@@ -318,6 +322,7 @@ public class PhotoViewActivity extends FragmentActivity implements
                     mRestartLoader = true;
                     return;
                 }
+                boolean wasEmpty = mIsEmpty;
                 mIsEmpty = false;
 
                 mAdapter.swapCursor(data);
@@ -335,7 +340,9 @@ public class PhotoViewActivity extends FragmentActivity implements
                 }
 
                 mViewPager.setCurrentItem(itemIndex, false);
-                setViewActivated();
+                if (wasEmpty) {
+                    setViewActivated(itemIndex);
+                }
             }
             // Update the any action items
             updateActionItems();
@@ -368,7 +375,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     @Override
     public void onPageSelected(int position) {
         mPhotoIndex = position;
-        setViewActivated();
+        setViewActivated(position);
     }
 
     @Override
@@ -393,14 +400,13 @@ public class PhotoViewActivity extends FragmentActivity implements
         boolean interceptLeft = false;
         boolean interceptRight = false;
 
-        for (OnScreenListener listener : mScreenListeners) {
+        for (OnScreenListener listener : mScreenListeners.values()) {
             if (!interceptLeft) {
                 interceptLeft = listener.onInterceptMoveLeft(origX, origY);
             }
             if (!interceptRight) {
                 interceptRight = listener.onInterceptMoveRight(origX, origY);
             }
-            listener.onViewActivated();
         }
 
         if (interceptLeft) {
@@ -432,7 +438,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
 
         if (fullScreenChanged) {
-            for (OnScreenListener listener : mScreenListeners) {
+            for (OnScreenListener listener : mScreenListeners.values()) {
                 listener.onFullScreenChanged(mFullScreen);
             }
         }
@@ -480,8 +486,9 @@ public class PhotoViewActivity extends FragmentActivity implements
     };
 
     @Override
-    public void setViewActivated() {
-        for (OnScreenListener listener : mScreenListeners) {
+    public void setViewActivated(int position) {
+        OnScreenListener listener = mScreenListeners.get(position);
+        if (listener != null) {
             listener.onViewActivated();
         }
     }
@@ -553,8 +560,8 @@ public class PhotoViewActivity extends FragmentActivity implements
     }
 
     @Override
-    public void onNewPhotoLoaded() {
-        setViewActivated();
+    public void onNewPhotoLoaded(int position) {
+        // do nothing
     }
 
     protected boolean isFullScreen() {
