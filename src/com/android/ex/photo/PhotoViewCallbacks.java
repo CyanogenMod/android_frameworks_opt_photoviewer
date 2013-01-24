@@ -3,8 +3,6 @@ package com.android.ex.photo;
 import android.database.Cursor;
 import android.support.v4.app.Fragment;
 
-import com.android.ex.photo.fragments.PhotoViewFragment;
-
 public interface PhotoViewCallbacks {
     /**
      * Listener to be invoked for screen events.
@@ -64,7 +62,7 @@ public interface PhotoViewCallbacks {
 
     public boolean isFragmentActive(Fragment fragment);
 
-    public void onFragmentVisible(PhotoViewFragment fragment);
+    public void onFragmentVisible(Fragment fragment);
 
     public boolean isFragmentFullScreen(Fragment fragment);
 }

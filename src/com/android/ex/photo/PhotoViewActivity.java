@@ -380,8 +380,11 @@ public class PhotoViewActivity extends FragmentActivity implements
     }
 
     @Override
-    public void onFragmentVisible(PhotoViewFragment fragment) {
-        updateActionBar(fragment);
+    public void onFragmentVisible(Fragment fragment) {
+        if (fragment instanceof PhotoViewFragment) {
+            PhotoViewFragment photoFragment = (PhotoViewFragment)fragment;
+            updateActionBar(photoFragment);
+        }
     }
 
     @Override
