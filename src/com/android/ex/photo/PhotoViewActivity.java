@@ -61,6 +61,10 @@ public class PhotoViewActivity extends FragmentActivity implements
             "com.google.android.apps.plus.PhotoViewFragment.ITEM";
     private final static String STATE_FULLSCREEN_KEY =
             "com.google.android.apps.plus.PhotoViewFragment.FULLSCREEN";
+    private final static String STATE_ACTIONBARTITLE_KEY =
+            "com.google.android.apps.plus.PhotoViewFragment.ACTIONBARTITLE";
+    private final static String STATE_ACTIONBARSUBTITLE_KEY =
+            "com.google.android.apps.plus.PhotoViewFragment.ACTIONBARSUBTITLE";
 
     private static final int LOADER_PHOTO_LIST = 1;
 
@@ -103,6 +107,11 @@ public class PhotoViewActivity extends FragmentActivity implements
     private boolean mIsPaused = true;
     /** The maximum scale factor applied to images when they are initially displayed */
     private float mMaxInitialScale;
+    /** The title in the actionbar */
+    private String mActionBarTitle;
+    /** The subtitle in the actionbar */
+    private String mActionBarSubtitle;
+
     private final Handler mHandler = new Handler();
     // TODO Find a better way to do this. We basically want the activity to display the
     // "loading..." progress until the fragment takes over and shows it's own "loading..."
@@ -131,6 +140,8 @@ public class PhotoViewActivity extends FragmentActivity implements
         if (savedInstanceState != null) {
             currentItem = savedInstanceState.getInt(STATE_ITEM_KEY, -1);
             mFullScreen = savedInstanceState.getBoolean(STATE_FULLSCREEN_KEY, false);
+            mActionBarTitle = savedInstanceState.getString(STATE_ACTIONBARTITLE_KEY);
+            mActionBarSubtitle = savedInstanceState.getString(STATE_ACTIONBARSUBTITLE_KEY);
         }
 
         // uri of the photos to view; optional
@@ -183,7 +194,9 @@ public class PhotoViewActivity extends FragmentActivity implements
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.addOnMenuVisibilityListener(this);
-            actionBar.setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE);
+            final int showTitle = ActionBar.DISPLAY_SHOW_TITLE;
+            actionBar.setDisplayOptions(showTitle, showTitle);
+            setActionBarTitles(actionBar);
         }
     }
 
@@ -222,6 +235,8 @@ public class PhotoViewActivity extends FragmentActivity implements
 
         outState.putInt(STATE_ITEM_KEY, mViewPager.getCurrentItem());
         outState.putBoolean(STATE_FULLSCREEN_KEY, mFullScreen);
+        outState.putString(STATE_ACTIONBARTITLE_KEY, mActionBarTitle);
+        outState.putString(STATE_ACTIONBARSUBTITLE_KEY, mActionBarSubtitle);
     }
 
     @Override
@@ -392,7 +407,7 @@ public class PhotoViewActivity extends FragmentActivity implements
 
     @Override
     public void onFragmentVisible(PhotoViewFragment fragment) {
-        updateActionBar(fragment);
+        updateActionBar();
     }
 
     @Override
@@ -496,31 +511,49 @@ public class PhotoViewActivity extends FragmentActivity implements
     /**
      * Adjusts the activity title and subtitle to reflect the photo name and count.
      */
-    protected void updateActionBar(PhotoViewFragment fragment) {
+    protected void updateActionBar() {
         final int position = mViewPager.getCurrentItem() + 1;
-        final String title;
-        final String subtitle;
         final boolean hasAlbumCount = mAlbumCount >= 0;
 
         final Cursor cursor = getCursorAtProperPosition();
-
         if (cursor != null) {
             final int photoNameIndex = cursor.getColumnIndex(PhotoContract.PhotoViewColumns.NAME);
-            title = cursor.getString(photoNameIndex);
+            mActionBarTitle = cursor.getString(photoNameIndex);
         } else {
-            title = null;
+            mActionBarTitle = null;
         }
 
         if (mIsEmpty || !hasAlbumCount || position <= 0) {
-            subtitle = null;
+            mActionBarSubtitle = null;
         } else {
-            subtitle = getResources().getString(R.string.photo_view_count, position, mAlbumCount);
+            mActionBarSubtitle =
+                    getResources().getString(R.string.photo_view_count, position, mAlbumCount);
         }
+        setActionBarTitles(getActionBar());
+    }
 
-        final ActionBar actionBar = getActionBar();
-        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
-        actionBar.setTitle(title);
-        actionBar.setSubtitle(subtitle);
+    /**
+     * Sets the Action Bar title to {@link #mActionBarTitle} and the subtitle to
+     * {@link #mActionBarSubtitle}
+     */
+    private final void setActionBarTitles(ActionBar actionBar) {
+        if (actionBar == null) {
+            return;
+        }
+        actionBar.setTitle(getInputOrEmpty(mActionBarTitle));
+        actionBar.setSubtitle(getInputOrEmpty(mActionBarSubtitle));
+    }
+
+    /**
+     * If the input string is non-null, it is returned, otherwise an empty string is returned;
+     * @param in
+     * @return
+     */
+    private static final String getInputOrEmpty(String in) {
+        if (in == null) {
+            return "";
+        }
+        return in;
     }
 
     /**
