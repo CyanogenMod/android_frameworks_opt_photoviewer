@@ -150,7 +150,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
 
         // projection for the query; optional
-        // I.f not set, the default projection is used.
+        // If not set, the default projection is used.
         // This projection must include the columns from the default projection.
         if (mIntent.hasExtra(Intents.EXTRA_PROJECTION)) {
             mProjection = mIntent.getStringArrayExtra(Intents.EXTRA_PROJECTION);
@@ -159,24 +159,26 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
 
         // Set the current item from the intent if wasn't in the saved instance
-        if (mIntent.hasExtra(Intents.EXTRA_PHOTO_INDEX) && currentItem < 0) {
-            currentItem = mIntent.getIntExtra(Intents.EXTRA_PHOTO_INDEX, -1);
+        if (currentItem < 0) {
+            if (mIntent.hasExtra(Intents.EXTRA_PHOTO_INDEX)) {
+                currentItem = mIntent.getIntExtra(Intents.EXTRA_PHOTO_INDEX, -1);
+            }
+            if (mIntent.hasExtra(Intents.EXTRA_INITIAL_PHOTO_URI)) {
+                mInitialPhotoUri = mIntent.getStringExtra(Intents.EXTRA_INITIAL_PHOTO_URI);
+            }
         }
-        if (mIntent.hasExtra(Intents.EXTRA_INITIAL_PHOTO_URI) && currentItem < 0) {
-            mInitialPhotoUri = mIntent.getStringExtra(Intents.EXTRA_INITIAL_PHOTO_URI);
-        }
-
         // Set the max initial scale, defaulting to 1x
         mMaxInitialScale = mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1.0f);
 
-        mPhotoIndex = currentItem;
+        // If we still have a negative current item, set it to zero
+        mPhotoIndex = Math.max(currentItem, 0);
         mIsEmpty = true;
 
         setContentView(R.layout.photo_activity_view);
 
         // Create the adapter and add the view pager
-        mAdapter = createPhotoPagerAdapter(this, getSupportFragmentManager(),
-            null, mMaxInitialScale);
+        mAdapter =
+                createPhotoPagerAdapter(this, getSupportFragmentManager(), null, mMaxInitialScale);
         final Resources resources = getResources();
         mRootView = findViewById(R.id.photo_activity_root_view);
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
@@ -608,5 +610,10 @@ public class PhotoViewActivity extends FragmentActivity implements
     @Override
     public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor) {
         // do nothing
+    }
+
+    @Override
+    public PhotoPagerAdapter getAdapter() {
+        return mAdapter;
     }
 }

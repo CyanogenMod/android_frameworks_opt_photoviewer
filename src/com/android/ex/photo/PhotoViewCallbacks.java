@@ -3,6 +3,7 @@ package com.android.ex.photo;
 import android.database.Cursor;
 import android.support.v4.app.Fragment;
 
+import com.android.ex.photo.adapters.PhotoPagerAdapter;
 import com.android.ex.photo.fragments.PhotoViewFragment;
 
 public interface PhotoViewCallbacks {
@@ -71,4 +72,9 @@ public interface PhotoViewCallbacks {
     public boolean isFragmentFullScreen(Fragment fragment);
 
     public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor);
+
+    /**
+     * Returns the adapter associated with this activity.
+     */
+    public PhotoPagerAdapter getAdapter();
 }
