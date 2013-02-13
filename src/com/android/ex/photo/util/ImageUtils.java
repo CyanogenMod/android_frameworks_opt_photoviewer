@@ -25,7 +25,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
-import android.util.DisplayMetrics;
+import android.util.Base64;
 import android.util.Log;
 
 import com.android.ex.photo.PhotoViewActivity;
@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.regex.Pattern;
 
 
 /**
@@ -51,6 +52,9 @@ public class ImageUtils {
     private final static long MIN_NORMAL_CLASS = 32;
     /** Minimum class memory class to use small photos */
     private final static long MIN_SMALL_CLASS = 24;
+
+    private static final String BASE64_URI_PREFIX = "base64,";
+    private static final Pattern BASE64_IMAGE_URI_PATTERN = Pattern.compile("^(?:.*;)?base64,.*");
 
     public static enum ImageSize {
         EXTRA_SMALL,
@@ -234,7 +238,7 @@ public class ImageUtils {
     private static InputStream openInputStream(ContentResolver resolver, Uri uri) throws
             FileNotFoundException {
         String scheme = uri.getScheme();
-        if("http".equals(scheme) || "https".equals(scheme)) {
+        if ("http".equals(scheme) || "https".equals(scheme)) {
             try {
                 return new URL(uri.toString()).openStream();
             } catch (MalformedURLException e) {
@@ -245,7 +249,31 @@ public class ImageUtils {
                 Log.w(TAG, "Could not open input stream for uri: " + uri.toString());
                 return null;
             }
+        } else if ("data".equals(scheme)) {
+            byte[] data = parseDataUri(uri);
+            if (data != null) {
+                return new ByteArrayInputStream(data);
+            }
         }
         return resolver.openInputStream(uri);
+    }
+
+    private static byte[] parseDataUri(Uri uri) {
+        String ssp = uri.getSchemeSpecificPart();
+        try {
+            if (ssp.startsWith(BASE64_URI_PREFIX)) {
+                String base64 = ssp.substring(BASE64_URI_PREFIX.length());
+                return Base64.decode(base64, Base64.URL_SAFE);
+            } else if (BASE64_IMAGE_URI_PATTERN.matcher(ssp).matches()){
+                String base64 = ssp.substring(
+                        ssp.indexOf(BASE64_URI_PREFIX) + BASE64_URI_PREFIX.length());
+                return Base64.decode(base64, Base64.DEFAULT);
+            } else {
+                return null;
+            }
+        } catch (IllegalArgumentException ex) {
+            Log.e(TAG, "Mailformed data URI: " + ex);
+            return null;
+        }
     }
 }

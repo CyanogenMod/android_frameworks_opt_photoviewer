@@ -17,10 +17,10 @@
 
 package com.android.ex.photo.adapters;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.View;
@@ -37,13 +37,13 @@ import java.util.HashMap;
 public abstract class BaseCursorPagerAdapter extends BaseFragmentPagerAdapter {
     private static final String TAG = "BaseCursorPagerAdapter";
 
-    Context mContext;
-    private Cursor mCursor;
-    private int mRowIDColumn;
+    protected Context mContext;
+    protected Cursor mCursor;
+    protected int mRowIDColumn;
     /** Mapping of row ID to cursor position */
-    private SparseIntArray mItemPosition;
+    protected SparseIntArray mItemPosition;
     /** Mapping of instantiated object to row ID */
-    private final HashMap<Object, Integer> mObjectRowMap = new HashMap<Object, Integer>();
+    protected final HashMap<Object, Integer> mObjectRowMap = new HashMap<Object, Integer>();
 
     /**
      * Constructor that always enables auto-requery.

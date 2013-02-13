@@ -21,15 +21,16 @@ import android.app.ActionBar;
 import android.app.ActionBar.OnMenuVisibilityListener;
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.Fragment;
-import android.app.LoaderManager.LoaderCallbacks;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,53 +48,9 @@ import java.util.Set;
 /**
  * Activity to view the contents of an album.
  */
-public class PhotoViewActivity extends Activity implements
-        LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
-        OnMenuVisibilityListener {
-
-    /**
-     * Listener to be invoked for screen events.
-     */
-    public static interface OnScreenListener {
-
-        /**
-         * The full screen state has changed.
-         */
-        public void onFullScreenChanged(boolean fullScreen);
-
-        /**
-         * A new view has been activated and the previous view de-activated.
-         */
-        public void onViewActivated();
-
-        /**
-         * Called when a right-to-left touch move intercept is about to occur.
-         *
-         * @param origX the raw x coordinate of the initial touch
-         * @param origY the raw y coordinate of the initial touch
-         * @return {@code true} if the touch should be intercepted.
-         */
-        public boolean onInterceptMoveLeft(float origX, float origY);
-
-        /**
-         * Called when a left-to-right touch move intercept is about to occur.
-         *
-         * @param origX the raw x coordinate of the initial touch
-         * @param origY the raw y coordinate of the initial touch
-         * @return {@code true} if the touch should be intercepted.
-         */
-        public boolean onInterceptMoveRight(float origX, float origY);
-    }
-
-    public static interface CursorChangedListener {
-        /**
-         * Called when the cursor that contains the photo list data
-         * is updated. Note that there is no guarantee that the cursor
-         * will be at the proper position.
-         * @param cursor the cursor containing the photo list data
-         */
-        public void onCursorChanged(Cursor cursor);
-    }
+public class PhotoViewActivity extends FragmentActivity implements
+        LoaderManager.LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
+        OnMenuVisibilityListener, PhotoViewCallbacks {
 
     private final static String STATE_ITEM_KEY =
             "com.google.android.apps.plus.PhotoViewFragment.ITEM";
@@ -188,7 +145,7 @@ public class PhotoViewActivity extends Activity implements
         setContentView(R.layout.photo_activity_view);
 
         // Create the adapter and add the view pager
-        mAdapter = new PhotoPagerAdapter(this, getFragmentManager(), null, mMaxInitialScale);
+        mAdapter = new PhotoPagerAdapter(this, getSupportFragmentManager(), null, mMaxInitialScale);
 
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
         mViewPager.setAdapter(mAdapter);
@@ -196,7 +153,7 @@ public class PhotoViewActivity extends Activity implements
         mViewPager.setOnInterceptTouchListener(this);
 
         // Kick off the loader
-        getLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
+        getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
 
         final ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -214,7 +171,7 @@ public class PhotoViewActivity extends Activity implements
         mIsPaused = false;
         if (mRestartLoader) {
             mRestartLoader = false;
-            getLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
+            getSupportLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
         }
     }
 
@@ -253,22 +210,27 @@ public class PhotoViewActivity extends Activity implements
        }
     }
 
+    @Override
     public void addScreenListener(OnScreenListener listener) {
         mScreenListeners.add(listener);
     }
 
+    @Override
     public void removeScreenListener(OnScreenListener listener) {
         mScreenListeners.remove(listener);
     }
 
+    @Override
     public synchronized void addCursorListener(CursorChangedListener listener) {
         mCursorListeners.add(listener);
     }
 
+    @Override
     public synchronized void removeCursorListener(CursorChangedListener listener) {
         mCursorListeners.remove(listener);
     }
 
+    @Override
     public boolean isFragmentFullScreen(Fragment fragment) {
         if (mViewPager == null || mAdapter == null || mAdapter.getCount() == 0) {
             return mFullScreen;
@@ -276,6 +238,7 @@ public class PhotoViewActivity extends Activity implements
         return mFullScreen || (mViewPager.getCurrentItem() != mAdapter.getItemPosition(fragment));
     }
 
+    @Override
     public void toggleFullScreen() {
         setFullScreen(!mFullScreen, true);
     }
@@ -293,7 +256,7 @@ public class PhotoViewActivity extends Activity implements
             return;
         }
 
-        getLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
+        getSupportLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
     }
 
     @Override
@@ -305,7 +268,7 @@ public class PhotoViewActivity extends Activity implements
     }
 
     @Override
-    public void onLoadFinished(final Loader<Cursor> loader, final Cursor data) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         final int id = loader.getId();
         if (id == LOADER_PHOTO_LIST) {
             if (data == null || data.getCount() == 0) {
@@ -342,6 +305,13 @@ public class PhotoViewActivity extends Activity implements
         }
     }
 
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+        // If the loader is reset, remove the reference in the adapter to this cursor
+        // TODO(pwestbro): reenable this when b/7075236 is fixed
+        // mAdapter.swapCursor(null);
+    }
+
     protected void updateActionItems() {
         // Do nothing, but allow extending classes to do work
     }
@@ -352,13 +322,6 @@ public class PhotoViewActivity extends Activity implements
         for (CursorChangedListener listener : mCursorListeners) {
             listener.onCursorChanged(data);
         }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        // If the loader is reset, remove the reference in the adapter to this cursor
-        // TODO(pwestbro): reenable this when b/7075236 is fixed
-        // mAdapter.swapCursor(null);
     }
 
     @Override
@@ -375,6 +338,7 @@ public class PhotoViewActivity extends Activity implements
     public void onPageScrollStateChanged(int state) {
     }
 
+    @Override
     public boolean isFragmentActive(Fragment fragment) {
         if (mViewPager == null || mAdapter == null) {
             return false;
@@ -478,6 +442,7 @@ public class PhotoViewActivity extends Activity implements
         }
     };
 
+    @Override
     public void setViewActivated() {
         for (OnScreenListener listener : mScreenListeners) {
             listener.onViewActivated();
@@ -557,4 +522,5 @@ public class PhotoViewActivity extends Activity implements
     protected void setPhotoIndex(int index) {
         mPhotoIndex = index;
     }
+
 }
