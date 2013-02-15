@@ -3,6 +3,9 @@ package com.android.ex.photo;
 import android.database.Cursor;
 import android.support.v4.app.Fragment;
 
+import com.android.ex.photo.adapters.PhotoPagerAdapter;
+import com.android.ex.photo.fragments.PhotoViewFragment;
+
 public interface PhotoViewCallbacks {
     /**
      * Listener to be invoked for screen events.
@@ -48,15 +51,17 @@ public interface PhotoViewCallbacks {
         public void onCursorChanged(Cursor cursor);
     }
 
-    public void addScreenListener(OnScreenListener listener);
+    public void addScreenListener(int position, OnScreenListener listener);
 
-    public void removeScreenListener(OnScreenListener listener);
+    public void removeScreenListener(int position);
 
     public void addCursorListener(CursorChangedListener listener);
 
     public void removeCursorListener(CursorChangedListener listener);
 
-    public void setViewActivated();
+    public void setViewActivated(int position);
+
+    public void onNewPhotoLoaded(int position);
 
     public void toggleFullScreen();
 
@@ -65,4 +70,11 @@ public interface PhotoViewCallbacks {
     public void onFragmentVisible(Fragment fragment);
 
     public boolean isFragmentFullScreen(Fragment fragment);
+
+    public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor);
+
+    /**
+     * Returns the adapter associated with this activity.
+     */
+    public PhotoPagerAdapter getAdapter();
 }

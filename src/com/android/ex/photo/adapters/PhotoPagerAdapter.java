@@ -35,7 +35,8 @@ public class PhotoPagerAdapter extends BaseCursorPagerAdapter {
     protected int mLoadingIndex;
     protected final float mMaxScale;
 
-    public PhotoPagerAdapter(Context context, android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
+    public PhotoPagerAdapter(
+            Context context, android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
         super(context, fm, c);
         mMaxScale = maxScale;
     }
@@ -63,7 +64,7 @@ public class PhotoPagerAdapter extends BaseCursorPagerAdapter {
             .setThumbnailUri(thumbnailUri)
             .setMaxInitialScale(mMaxScale);
 
-        return new PhotoViewFragment(builder.build(), position, this, onlyShowSpinner);
+        return PhotoViewFragment.newInstance(builder.build(), position, onlyShowSpinner);
     }
 
     @Override

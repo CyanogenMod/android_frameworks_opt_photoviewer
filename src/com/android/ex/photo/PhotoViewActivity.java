@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -44,7 +45,9 @@ import com.android.ex.photo.fragments.PhotoViewFragment;
 import com.android.ex.photo.loaders.PhotoPagerLoader;
 import com.android.ex.photo.provider.PhotoContract;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -58,6 +61,10 @@ public class PhotoViewActivity extends FragmentActivity implements
             "com.google.android.apps.plus.PhotoViewFragment.ITEM";
     private final static String STATE_FULLSCREEN_KEY =
             "com.google.android.apps.plus.PhotoViewFragment.FULLSCREEN";
+    private final static String STATE_ACTIONBARTITLE_KEY =
+            "com.google.android.apps.plus.PhotoViewFragment.ACTIONBARTITLE";
+    private final static String STATE_ACTIONBARSUBTITLE_KEY =
+            "com.google.android.apps.plus.PhotoViewFragment.ACTIONBARSUBTITLE";
 
     private static final int LOADER_PHOTO_LIST = 1;
 
@@ -89,8 +96,9 @@ public class PhotoViewActivity extends FragmentActivity implements
     protected PhotoPagerAdapter mAdapter;
     /** Whether or not we're in "full screen" mode */
     private boolean mFullScreen;
-    /** The set of listeners wanting full screen state */
-    private Set<OnScreenListener> mScreenListeners = new HashSet<OnScreenListener>();
+    /** The listeners wanting full screen state for each screen position */
+    private Map<Integer, OnScreenListener>
+            mScreenListeners = new HashMap<Integer, OnScreenListener>();
     /** The set of listeners wanting full screen state */
     private Set<CursorChangedListener> mCursorListeners = new HashSet<CursorChangedListener>();
     /** When {@code true}, restart the loader when the activity becomes active */
@@ -99,6 +107,11 @@ public class PhotoViewActivity extends FragmentActivity implements
     private boolean mIsPaused = true;
     /** The maximum scale factor applied to images when they are initially displayed */
     private float mMaxInitialScale;
+    /** The title in the actionbar */
+    private String mActionBarTitle;
+    /** The subtitle in the actionbar */
+    private String mActionBarSubtitle;
+
     private final Handler mHandler = new Handler();
     // TODO Find a better way to do this. We basically want the activity to display the
     // "loading..." progress until the fragment takes over and shows it's own "loading..."
@@ -106,7 +119,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     // by the activity, but, that gets tricky when it comes to screen rotation. For now, we
     // track the loading by this variable which is fragile and may cause phantom "loading..."
     // text.
-    private long mActionBarHideDelayTime;
+    private long mEnterFullScreenDelayTime;
 
     protected PhotoPagerAdapter createPhotoPagerAdapter(Context context,
             android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
@@ -127,6 +140,8 @@ public class PhotoViewActivity extends FragmentActivity implements
         if (savedInstanceState != null) {
             currentItem = savedInstanceState.getInt(STATE_ITEM_KEY, -1);
             mFullScreen = savedInstanceState.getBoolean(STATE_FULLSCREEN_KEY, false);
+            mActionBarTitle = savedInstanceState.getString(STATE_ACTIONBARTITLE_KEY);
+            mActionBarSubtitle = savedInstanceState.getString(STATE_ACTIONBARSUBTITLE_KEY);
         }
 
         // uri of the photos to view; optional
@@ -135,7 +150,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
 
         // projection for the query; optional
-        // I.f not set, the default projection is used.
+        // If not set, the default projection is used.
         // This projection must include the columns from the default projection.
         if (mIntent.hasExtra(Intents.EXTRA_PROJECTION)) {
             mProjection = mIntent.getStringArrayExtra(Intents.EXTRA_PROJECTION);
@@ -144,38 +159,46 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
 
         // Set the current item from the intent if wasn't in the saved instance
-        if (mIntent.hasExtra(Intents.EXTRA_PHOTO_INDEX) && currentItem < 0) {
-            currentItem = mIntent.getIntExtra(Intents.EXTRA_PHOTO_INDEX, -1);
+        if (currentItem < 0) {
+            if (mIntent.hasExtra(Intents.EXTRA_PHOTO_INDEX)) {
+                currentItem = mIntent.getIntExtra(Intents.EXTRA_PHOTO_INDEX, -1);
+            }
+            if (mIntent.hasExtra(Intents.EXTRA_INITIAL_PHOTO_URI)) {
+                mInitialPhotoUri = mIntent.getStringExtra(Intents.EXTRA_INITIAL_PHOTO_URI);
+            }
         }
-        if (mIntent.hasExtra(Intents.EXTRA_INITIAL_PHOTO_URI) && currentItem < 0) {
-            mInitialPhotoUri = mIntent.getStringExtra(Intents.EXTRA_INITIAL_PHOTO_URI);
-        }
-
         // Set the max initial scale, defaulting to 1x
         mMaxInitialScale = mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1.0f);
 
-        mPhotoIndex = currentItem;
+        // If we still have a negative current item, set it to zero
+        mPhotoIndex = Math.max(currentItem, 0);
+        mIsEmpty = true;
 
         setContentView(R.layout.photo_activity_view);
 
         // Create the adapter and add the view pager
-        mAdapter = createPhotoPagerAdapter(this, getSupportFragmentManager(),
-            null, mMaxInitialScale);
+        mAdapter =
+                createPhotoPagerAdapter(this, getSupportFragmentManager(), null, mMaxInitialScale);
+        final Resources resources = getResources();
         mRootView = findViewById(R.id.photo_activity_root_view);
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
         mViewPager.setOnPageChangeListener(this);
         mViewPager.setOnInterceptTouchListener(this);
+        mViewPager.setPageMargin(resources.getDimensionPixelSize(R.dimen.photo_page_margin));
 
         // Kick off the loader
         getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
 
+        mEnterFullScreenDelayTime =
+                resources.getInteger(R.integer.reenter_fullscreen_delay_time_in_millis);
+
         final ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            mActionBarHideDelayTime = getResources().getInteger(
-                    R.integer.action_bar_delay_time_in_millis);
             actionBar.addOnMenuVisibilityListener(this);
-            actionBar.setDisplayOptions(0, ActionBar.DISPLAY_SHOW_TITLE);
+            final int showTitle = ActionBar.DISPLAY_SHOW_TITLE;
+            actionBar.setDisplayOptions(showTitle, showTitle);
+            setActionBarTitles(actionBar);
         }
     }
 
@@ -214,6 +237,8 @@ public class PhotoViewActivity extends FragmentActivity implements
 
         outState.putInt(STATE_ITEM_KEY, mViewPager.getCurrentItem());
         outState.putBoolean(STATE_FULLSCREEN_KEY, mFullScreen);
+        outState.putString(STATE_ACTIONBARTITLE_KEY, mActionBarTitle);
+        outState.putString(STATE_ACTIONBARSUBTITLE_KEY, mActionBarSubtitle);
     }
 
     @Override
@@ -227,13 +252,13 @@ public class PhotoViewActivity extends FragmentActivity implements
     }
 
     @Override
-    public void addScreenListener(OnScreenListener listener) {
-        mScreenListeners.add(listener);
+    public void addScreenListener(int position, OnScreenListener listener) {
+        mScreenListeners.put(position, listener);
     }
 
     @Override
-    public void removeScreenListener(OnScreenListener listener) {
-        mScreenListeners.remove(listener);
+    public void removeScreenListener(int position) {
+        mScreenListeners.remove(position);
     }
 
     @Override
@@ -314,6 +339,7 @@ public class PhotoViewActivity extends FragmentActivity implements
                     mRestartLoader = true;
                     return;
                 }
+                boolean wasEmpty = mIsEmpty;
                 mIsEmpty = false;
 
                 mAdapter.swapCursor(data);
@@ -331,7 +357,9 @@ public class PhotoViewActivity extends FragmentActivity implements
                 }
 
                 mViewPager.setCurrentItem(itemIndex, false);
-                setViewActivated();
+                if (wasEmpty) {
+                    setViewActivated(itemIndex);
+                }
             }
             // Update the any action items
             updateActionItems();
@@ -364,7 +392,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     @Override
     public void onPageSelected(int position) {
         mPhotoIndex = position;
-        setViewActivated();
+        setViewActivated(position);
     }
 
     @Override
@@ -381,10 +409,7 @@ public class PhotoViewActivity extends FragmentActivity implements
 
     @Override
     public void onFragmentVisible(Fragment fragment) {
-        if (fragment instanceof PhotoViewFragment) {
-            PhotoViewFragment photoFragment = (PhotoViewFragment)fragment;
-            updateActionBar(photoFragment);
-        }
+        updateActionBar();
     }
 
     @Override
@@ -392,14 +417,13 @@ public class PhotoViewActivity extends FragmentActivity implements
         boolean interceptLeft = false;
         boolean interceptRight = false;
 
-        for (OnScreenListener listener : mScreenListeners) {
+        for (OnScreenListener listener : mScreenListeners.values()) {
             if (!interceptLeft) {
                 interceptLeft = listener.onInterceptMoveLeft(origX, origY);
             }
             if (!interceptRight) {
                 interceptRight = listener.onInterceptMoveRight(origX, origY);
             }
-            listener.onViewActivated();
         }
 
         if (interceptLeft) {
@@ -422,28 +446,27 @@ public class PhotoViewActivity extends FragmentActivity implements
 
         if (mFullScreen) {
             setLightsOutMode(true);
-            cancelActionBarHideRunnable();
+            cancelEnterFullScreenRunnable();
         } else {
             setLightsOutMode(false);
             if (setDelayedRunnable) {
-                postActionBarHideRunnableWithDelay();
+                postEnterFullScreenRunnableWithDelay();
             }
         }
 
         if (fullScreenChanged) {
-            for (OnScreenListener listener : mScreenListeners) {
+            for (OnScreenListener listener : mScreenListeners.values()) {
                 listener.onFullScreenChanged(mFullScreen);
             }
         }
     }
 
-    private void postActionBarHideRunnableWithDelay() {
-        mHandler.postDelayed(mActionBarHideRunnable,
-                mActionBarHideDelayTime);
+    private void postEnterFullScreenRunnableWithDelay() {
+        mHandler.postDelayed(mEnterFullScreenRunnable, mEnterFullScreenDelayTime);
     }
 
-    private void cancelActionBarHideRunnable() {
-        mHandler.removeCallbacks(mActionBarHideRunnable);
+    private void cancelEnterFullScreenRunnable() {
+        mHandler.removeCallbacks(mEnterFullScreenRunnable);
     }
 
     protected void setLightsOutMode(boolean enabled) {
@@ -472,7 +495,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         }
     }
 
-    private Runnable mActionBarHideRunnable = new Runnable() {
+    private Runnable mEnterFullScreenRunnable = new Runnable() {
         @Override
         public void run() {
             setFullScreen(true, true);
@@ -480,8 +503,9 @@ public class PhotoViewActivity extends FragmentActivity implements
     };
 
     @Override
-    public void setViewActivated() {
-        for (OnScreenListener listener : mScreenListeners) {
+    public void setViewActivated(int position) {
+        OnScreenListener listener = mScreenListeners.get(position);
+        if (listener != null) {
             listener.onViewActivated();
         }
     }
@@ -489,31 +513,49 @@ public class PhotoViewActivity extends FragmentActivity implements
     /**
      * Adjusts the activity title and subtitle to reflect the photo name and count.
      */
-    protected void updateActionBar(PhotoViewFragment fragment) {
+    protected void updateActionBar() {
         final int position = mViewPager.getCurrentItem() + 1;
-        final String title;
-        final String subtitle;
         final boolean hasAlbumCount = mAlbumCount >= 0;
 
         final Cursor cursor = getCursorAtProperPosition();
-
         if (cursor != null) {
             final int photoNameIndex = cursor.getColumnIndex(PhotoContract.PhotoViewColumns.NAME);
-            title = cursor.getString(photoNameIndex);
+            mActionBarTitle = cursor.getString(photoNameIndex);
         } else {
-            title = null;
+            mActionBarTitle = null;
         }
 
         if (mIsEmpty || !hasAlbumCount || position <= 0) {
-            subtitle = null;
+            mActionBarSubtitle = null;
         } else {
-            subtitle = getResources().getString(R.string.photo_view_count, position, mAlbumCount);
+            mActionBarSubtitle =
+                    getResources().getString(R.string.photo_view_count, position, mAlbumCount);
         }
+        setActionBarTitles(getActionBar());
+    }
 
-        final ActionBar actionBar = getActionBar();
-        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE, ActionBar.DISPLAY_SHOW_TITLE);
-        actionBar.setTitle(title);
-        actionBar.setSubtitle(subtitle);
+    /**
+     * Sets the Action Bar title to {@link #mActionBarTitle} and the subtitle to
+     * {@link #mActionBarSubtitle}
+     */
+    private final void setActionBarTitles(ActionBar actionBar) {
+        if (actionBar == null) {
+            return;
+        }
+        actionBar.setTitle(getInputOrEmpty(mActionBarTitle));
+        actionBar.setSubtitle(getInputOrEmpty(mActionBarSubtitle));
+    }
+
+    /**
+     * If the input string is non-null, it is returned, otherwise an empty string is returned;
+     * @param in
+     * @return
+     */
+    private static final String getInputOrEmpty(String in) {
+        if (in == null) {
+            return "";
+        }
+        return in;
     }
 
     /**
@@ -546,10 +588,15 @@ public class PhotoViewActivity extends FragmentActivity implements
     @Override
     public void onMenuVisibilityChanged(boolean isVisible) {
         if (isVisible) {
-            cancelActionBarHideRunnable();
+            cancelEnterFullScreenRunnable();
         } else {
-            postActionBarHideRunnableWithDelay();
+            postEnterFullScreenRunnableWithDelay();
         }
+    }
+
+    @Override
+    public void onNewPhotoLoaded(int position) {
+        // do nothing
     }
 
     protected boolean isFullScreen() {
@@ -560,4 +607,13 @@ public class PhotoViewActivity extends FragmentActivity implements
         mPhotoIndex = index;
     }
 
+    @Override
+    public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor) {
+        // do nothing
+    }
+
+    @Override
+    public PhotoPagerAdapter getAdapter() {
+        return mAdapter;
+    }
 }
