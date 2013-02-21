@@ -118,6 +118,7 @@ public class PhotoViewFragment extends Fragment implements
     protected boolean mProgressBarNeeded = true;
 
     protected View mPhotoPreviewAndProgress;
+    protected boolean mThumbnailShown;
 
     /** Public no-arg constructor for allowing the framework to handle orientation changes */
     public PhotoViewFragment() {
@@ -129,7 +130,6 @@ public class PhotoViewFragment extends Fragment implements
      * @param intent
      * @param position
      * @param onlyShowSpinner
-     * @return
      */
     public static final PhotoViewFragment newInstance(
             Intent intent, int position, boolean onlyShowSpinner) {
@@ -227,6 +227,7 @@ public class PhotoViewFragment extends Fragment implements
 
         mPhotoPreviewAndProgress = view.findViewById(R.id.photo_preview);
         mPhotoPreviewImage = (ImageView) view.findViewById(R.id.photo_preview_image);
+        mThumbnailShown = false;
         final ProgressBar indeterminate =
                 (ProgressBar) view.findViewById(R.id.indeterminate_progress);
         final ProgressBar determinate =
@@ -316,9 +317,11 @@ public class PhotoViewFragment extends Fragment implements
                 if (data == null) {
                     // no preview, show default
                     mPhotoPreviewImage.setImageResource(R.drawable.default_image);
+                    mThumbnailShown = false;
                 } else {
                     // show preview
                     mPhotoPreviewImage.setImageBitmap(data);
+                    mThumbnailShown = true;
                 }
                 mPhotoPreviewImage.setVisibility(View.VISIBLE);
                 mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
@@ -465,16 +468,23 @@ public class PhotoViewFragment extends Fragment implements
             mCallback.onCursorChanged(this, cursor);
 
             final LoaderManager manager = getLoaderManager();
-            final Loader<Bitmap> fakeLoader = manager.getLoader(LOADER_ID_PHOTO);
-            if (fakeLoader == null) {
-                return;
+            final Loader<Bitmap> fakePhotoLoader = manager.getLoader(LOADER_ID_PHOTO);
+            if (fakePhotoLoader != null) {
+                final PhotoBitmapLoader loader = (PhotoBitmapLoader) fakePhotoLoader;
+                mResolvedPhotoUri = mAdapter.getPhotoUri(cursor);
+                loader.setPhotoUri(mResolvedPhotoUri);
+                loader.forceLoad();
             }
 
-            final PhotoBitmapLoader loader =
-                    (PhotoBitmapLoader) fakeLoader;
-            mResolvedPhotoUri = mAdapter.getPhotoUri(cursor);
-            loader.setPhotoUri(mResolvedPhotoUri);
-            loader.forceLoad();
+            if (!mThumbnailShown) {
+                final Loader<Bitmap> fakeThumbnailLoader = manager.getLoader(LOADER_ID_THUMBNAIL);
+                if (fakeThumbnailLoader != null) {
+                    final PhotoBitmapLoader loader = (PhotoBitmapLoader) fakeThumbnailLoader;
+                    mThumbnailUri = mAdapter.getThumbnailUri(cursor);
+                    loader.setPhotoUri(mThumbnailUri);
+                    loader.forceLoad();
+                }
+            }
         }
     }
 

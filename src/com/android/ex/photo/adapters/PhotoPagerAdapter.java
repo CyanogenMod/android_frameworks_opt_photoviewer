@@ -88,4 +88,8 @@ public class PhotoPagerAdapter extends BaseCursorPagerAdapter {
     public String getPhotoUri(Cursor cursor) {
         return cursor.getString(mContentUriIndex);
     }
+
+    public String getThumbnailUri(Cursor cursor) {
+        return cursor.getString(mThumbnailUriIndex);
+    }
 }
