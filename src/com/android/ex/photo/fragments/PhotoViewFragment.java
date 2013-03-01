@@ -324,7 +324,9 @@ public class PhotoViewFragment extends Fragment implements
                     mThumbnailShown = true;
                 }
                 mPhotoPreviewImage.setVisibility(View.VISIBLE);
-                mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
+                if (getResources().getBoolean(R.bool.force_thumbnail_no_scaling)) {
+                    mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
+                }
                 enableImageTransforms(false);
                 break;
             case LOADER_ID_PHOTO:
