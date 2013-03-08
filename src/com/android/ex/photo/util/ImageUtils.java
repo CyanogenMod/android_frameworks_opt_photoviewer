@@ -174,6 +174,12 @@ public class ImageUtils {
 
             final Bitmap originalBitmap = BitmapFactory.decodeStream(byteStream, outPadding, opts);
 
+            if (byteStream != null && originalBitmap == null && !opts.inJustDecodeBounds) {
+                Log.w(TAG, "ImageUtils#decodeStream(InputStream, Rect, Options): "
+                        + "Image bytes cannot be decoded into a Bitmap");
+                throw new UnsupportedOperationException(
+                        "Image bytes cannot be decoded into a Bitmap.");
+            }
             if (originalBitmap != null && orientation != 0) {
                 final Matrix matrix = new Matrix();
                 matrix.postRotate(orientation);
