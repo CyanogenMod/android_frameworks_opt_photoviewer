@@ -42,6 +42,7 @@ import com.android.ex.photo.PhotoViewCallbacks.OnScreenListener;
 import com.android.ex.photo.R;
 import com.android.ex.photo.adapters.PhotoPagerAdapter;
 import com.android.ex.photo.loaders.PhotoBitmapLoader;
+import com.android.ex.photo.loaders.PhotoBitmapLoader.BitmapResult;
 import com.android.ex.photo.util.ImageUtils;
 import com.android.ex.photo.views.PhotoView;
 import com.android.ex.photo.views.ProgressBarWrapper;
@@ -50,7 +51,7 @@ import com.android.ex.photo.views.ProgressBarWrapper;
  * Displays a photo.
  */
 public class PhotoViewFragment extends Fragment implements
-        LoaderManager.LoaderCallbacks<Bitmap>,
+        LoaderManager.LoaderCallbacks<BitmapResult>,
         OnClickListener,
         OnScreenListener,
         CursorChangedListener {
@@ -281,7 +282,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public Loader<Bitmap> onCreateLoader(int id, Bundle args) {
+    public Loader<BitmapResult> onCreateLoader(int id, Bundle args) {
         if(mOnlyShowSpinner) {
             return null;
         }
@@ -296,21 +297,19 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public void onLoadFinished(Loader<Bitmap> loader, Bitmap data) {
+    public void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
+        Bitmap data = result.bitmap;
         // If we don't have a view, the fragment has been paused. We'll get the cursor again later.
         if (getView() == null) {
             return;
         }
 
-        // both loaders are started together, they may finish loading in such a
-        // way that the thumbnail is displayed on top of the full image
         final int id = loader.getId();
         switch (id) {
             case LOADER_ID_THUMBNAIL:
                 if (isPhotoBound()) {
                     // There is need to do anything with the thumbnail
-                    // image, as the full size
-                    // image is being shown.
+                    // image, as the full size image is being shown.
                     return;
                 }
 
@@ -330,7 +329,14 @@ public class PhotoViewFragment extends Fragment implements
                 enableImageTransforms(false);
                 break;
             case LOADER_ID_PHOTO:
-                bindPhoto(data);
+
+                if (result.status == BitmapResult.STATUS_EXCEPTION) {
+                    mProgressBarNeeded = false;
+                    mEmptyText.setText(R.string.failed);
+                    mEmptyText.setVisibility(View.VISIBLE);
+                } else {
+                    bindPhoto(data);
+                }
                 break;
             default:
                 break;
@@ -379,7 +385,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public void onLoaderReset(Loader<Bitmap> loader) {
+    public void onLoaderReset(Loader<BitmapResult> loader) {
         // Do nothing
     }
 
@@ -470,7 +476,7 @@ public class PhotoViewFragment extends Fragment implements
             mCallback.onCursorChanged(this, cursor);
 
             final LoaderManager manager = getLoaderManager();
-            final Loader<Bitmap> fakePhotoLoader = manager.getLoader(LOADER_ID_PHOTO);
+            final Loader<BitmapResult> fakePhotoLoader = manager.getLoader(LOADER_ID_PHOTO);
             if (fakePhotoLoader != null) {
                 final PhotoBitmapLoader loader = (PhotoBitmapLoader) fakePhotoLoader;
                 mResolvedPhotoUri = mAdapter.getPhotoUri(cursor);
@@ -479,7 +485,8 @@ public class PhotoViewFragment extends Fragment implements
             }
 
             if (!mThumbnailShown) {
-                final Loader<Bitmap> fakeThumbnailLoader = manager.getLoader(LOADER_ID_THUMBNAIL);
+                final Loader<BitmapResult> fakeThumbnailLoader = manager.getLoader(
+                        LOADER_ID_THUMBNAIL);
                 if (fakeThumbnailLoader != null) {
                     final PhotoBitmapLoader loader = (PhotoBitmapLoader) fakeThumbnailLoader;
                     mThumbnailUri = mAdapter.getThumbnailUri(cursor);
