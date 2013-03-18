@@ -182,6 +182,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         final Resources resources = getResources();
         mRootView = findViewById(R.id.photo_activity_root_view);
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
+        mViewPager.setAdapter(mAdapter);
         mViewPager.setOnPageChangeListener(this);
         mViewPager.setOnInterceptTouchListener(this);
         mViewPager.setPageMargin(resources.getDimensionPixelSize(R.dimen.photo_page_margin));
