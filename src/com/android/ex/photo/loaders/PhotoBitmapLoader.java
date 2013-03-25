@@ -51,13 +51,11 @@ public class PhotoBitmapLoader extends AsyncTaskLoader<BitmapResult> {
         if (context != null && mPhotoUri != null) {
             final ContentResolver resolver = context.getContentResolver();
             try {
-                Bitmap bitmap = ImageUtils.createLocalBitmap(resolver, Uri.parse(mPhotoUri),
+                result = ImageUtils.createLocalBitmap(resolver, Uri.parse(mPhotoUri),
                         PhotoViewFragment.sPhotoSize);
-                if (bitmap != null) {
-                    bitmap.setDensity(DisplayMetrics.DENSITY_MEDIUM);
+                if (result.bitmap != null) {
+                    result.bitmap.setDensity(DisplayMetrics.DENSITY_MEDIUM);
                 }
-                result.status = BitmapResult.STATUS_SUCCESS;
-                result.bitmap = bitmap;
             } catch (UnsupportedOperationException ex) {
                 // We got image bytes, but unable to decode to a Bitmap
                 result.status = BitmapResult.STATUS_EXCEPTION;
@@ -170,7 +168,7 @@ public class PhotoBitmapLoader extends AsyncTaskLoader<BitmapResult> {
         }
     }
 
-    public class BitmapResult {
+    public static class BitmapResult {
         public static final int STATUS_SUCCESS = 0;
         public static final int STATUS_EXCEPTION = 1;
 
