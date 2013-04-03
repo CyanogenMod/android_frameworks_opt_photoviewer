@@ -17,10 +17,15 @@
 
 package com.android.ex.photo.fragments;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -121,6 +126,9 @@ public class PhotoViewFragment extends Fragment implements
     protected View mPhotoPreviewAndProgress;
     protected boolean mThumbnailShown;
 
+    /** Whether or not there is currently a connection to the internet */
+    protected boolean mConnected;
+
     /** Public no-arg constructor for allowing the framework to handle orientation changes */
     public PhotoViewFragment() {
         // Do nothing.
@@ -132,7 +140,7 @@ public class PhotoViewFragment extends Fragment implements
      * @param position
      * @param onlyShowSpinner
      */
-    public static final PhotoViewFragment newInstance(
+    public static PhotoViewFragment newInstance(
             Intent intent, int position, boolean onlyShowSpinner) {
         final Bundle b = new Bundle();
         b.putParcelable(ARG_INTENT, intent);
@@ -154,6 +162,11 @@ public class PhotoViewFragment extends Fragment implements
         mAdapter = mCallback.getAdapter();
         if (mAdapter == null) {
             throw new IllegalStateException("Callback reported null adapter");
+        }
+
+        if (hasNetworkStatePermission()) {
+            getActivity().registerReceiver(new InternetStateBroadcastReceiver(),
+                    new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
         }
         // Don't call until we've setup the entire view
         setViewVisibility();
@@ -243,6 +256,19 @@ public class PhotoViewFragment extends Fragment implements
         super.onResume();
         mCallback.addScreenListener(mPosition, this);
         mCallback.addCursorListener(this);
+
+        if (hasNetworkStatePermission()) {
+            ConnectivityManager connectivityManager = (ConnectivityManager)
+                    getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
+            if (activeNetInfo != null) {
+                mConnected = activeNetInfo.isConnected();
+            } else {
+                // Best to set this to false, since it won't stop us from trying to download,
+                // only allow us to try re-download if we get notified that we do have a connection.
+                mConnected = false;
+            }
+        }
 
         if (!isPhotoBound()) {
             mProgressBarNeeded = true;
@@ -365,6 +391,12 @@ public class PhotoViewFragment extends Fragment implements
             mPhotoPreviewAndProgress.setVisibility(View.GONE);
             mProgressBarNeeded = false;
         }
+    }
+
+    private boolean hasNetworkStatePermission() {
+        final String networkStatePermission = "android.permission.ACCESS_NETWORK_STATE";
+        int result = getActivity().checkCallingOrSelfPermission(networkStatePermission);
+        return result == PackageManager.PERMISSION_GRANTED;
     }
 
     /**
@@ -511,5 +543,29 @@ public class PhotoViewFragment extends Fragment implements
 
     public boolean isProgressBarNeeded() {
         return mProgressBarNeeded;
+    }
+
+    private class InternetStateBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // This is only created if we have the correct permissions, so
+            ConnectivityManager connectivityManager = (ConnectivityManager)
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
+            if (activeNetInfo == null) {
+                mConnected = false;
+                return;
+            }
+            if (mConnected == false && activeNetInfo.isConnected() && !isPhotoBound()) {
+                if (mThumbnailShown == false) {
+                    getLoaderManager().restartLoader(LOADER_ID_THUMBNAIL, null,
+                            PhotoViewFragment.this);
+                }
+                getLoaderManager().restartLoader(LOADER_ID_PHOTO, null, PhotoViewFragment.this);
+                mConnected = true;
+                mPhotoProgressBar.setVisibility(View.VISIBLE);
+            }
+        }
     }
 }
