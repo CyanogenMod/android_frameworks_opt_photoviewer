@@ -67,7 +67,7 @@ public interface PhotoViewCallbacks {
 
     public boolean isFragmentActive(Fragment fragment);
 
-    public void onFragmentVisible(PhotoViewFragment fragment);
+    public void onFragmentVisible(Fragment fragment);
 
     public boolean isFragmentFullScreen(Fragment fragment);
 

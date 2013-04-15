@@ -236,6 +236,9 @@ public class PhotoViewFragment extends Fragment implements
         mPhotoProgressBar = new ProgressBarWrapper(determinate, indeterminate, true);
         mEmptyText = (TextView) view.findViewById(R.id.empty_text);
         mRetryButton = (ImageView) view.findViewById(R.id.retry_button);
+
+        // Don't call until we've setup the entire view
+        setViewVisibility();
     }
 
     @Override
