@@ -332,7 +332,8 @@ public class PhotoViewFragment extends Fragment implements
                 enableImageTransforms(false);
                 break;
             case LOADER_ID_PHOTO:
-                if (result.status == BitmapResult.STATUS_EXCEPTION || data == null) {
+
+                if (result.status == BitmapResult.STATUS_EXCEPTION) {
                     mProgressBarNeeded = false;
                     mEmptyText.setText(R.string.failed);
                     mEmptyText.setVisibility(View.VISIBLE);
