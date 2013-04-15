@@ -17,6 +17,7 @@
 
 package com.android.ex.photo;
 
+import android.app.Activity;
 import android.content.ContentProvider;
 import android.content.Context;
 import android.content.Intent;
@@ -58,7 +59,7 @@ public class Intents {
 
     /** Gets a new photo view intent builder */
     public static PhotoViewIntentBuilder newPhotoViewIntentBuilder(
-            Context context, Class<? extends PhotoViewActivity> cls) {
+            Context context, Class<? extends Activity> cls) {
         return new PhotoViewIntentBuilder(context, cls);
     }
 
