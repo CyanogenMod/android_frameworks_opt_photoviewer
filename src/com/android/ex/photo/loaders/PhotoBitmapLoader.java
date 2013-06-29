@@ -79,6 +79,7 @@ public class PhotoBitmapLoader extends AsyncTaskLoader<BitmapResult> {
             if (bitmap != null) {
                 onReleaseResources(bitmap);
             }
+            return;
         }
         Bitmap oldBitmap = mBitmap;
         mBitmap = bitmap;
