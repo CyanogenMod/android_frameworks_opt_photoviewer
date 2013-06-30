@@ -29,7 +29,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.android.ex.photo.PhotoViewActivity;
-import com.android.ex.photo.loaders.PhotoBitmapLoader.BitmapResult;
+import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface.BitmapResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
