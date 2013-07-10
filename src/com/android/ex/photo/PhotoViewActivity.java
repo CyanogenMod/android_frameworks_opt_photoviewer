@@ -265,8 +265,8 @@ public class PhotoViewActivity extends SherlockFragmentActivity implements
         } else {
             // Attempt to load the initial image thumbnail. Once we have the
             // image, animate it up. Once the animation is complete, we can kick off
-            // loading the ViewPager. Once the primary image is loaded, we can make
-            // our temporary image invisible and display the ViewPager.
+            // loading the ViewPager. After the primary fullres image is loaded, we will
+            // make our temporary image invisible and display the ViewPager.
             mViewPager.setVisibility(View.GONE);
             Bundle args = new Bundle();
             args.putString(ARG_IMAGE_URI, mCurrentPhotoUri);
@@ -974,39 +974,35 @@ public class PhotoViewActivity extends SherlockFragmentActivity implements
     }
 
     private void initTemporaryImage(Bitmap bitmap) {
+        if (mEnterAnimationFinished) {
+            // Forget this, we've already run the animation.
+            return;
+        }
         mTemporaryImage.setImageBitmap(bitmap);
         if (bitmap != null) {
-            if (mEnterAnimationFinished) {
-                // We have already run the enter animation cycle. We don't
-                // want to scale or fade, just make the temporary image
-                // visible immediately. This happens when we recreate the
-                // activity for rotation or other configuration changes.
-                mTemporaryImage.setVisibility(View.VISIBLE);
-            } else {
-                // We have not yet run the enter animation. Start it now.
-                int totalWidth = mRootView.getMeasuredWidth();
-                if (totalWidth == 0) {
-                    // the measure pass has not yet finished.  We can't properly
-                    // run out animation until that is done. Listen for the layout
-                    // to occur, then fire the animation.
-                    final View base = mRootView;
-                    base.getViewTreeObserver().addOnGlobalLayoutListener(
-                            new OnGlobalLayoutListener() {
-                        @Override
-                        public void onGlobalLayout() {
-                            int version = android.os.Build.VERSION.SDK_INT;
-                            if (version >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-                                base.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                            } else {
-                                base.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                            }
-                            runEnterAnimation();
+            // We have not yet run the enter animation. Start it now.
+            int totalWidth = mRootView.getMeasuredWidth();
+            if (totalWidth == 0) {
+                // the measure pass has not yet finished.  We can't properly
+                // run out animation until that is done. Listen for the layout
+                // to occur, then fire the animation.
+                final View base = mRootView;
+                base.getViewTreeObserver().addOnGlobalLayoutListener(
+                        new OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        int version = android.os.Build.VERSION.SDK_INT;
+                        if (version >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                            base.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        } else {
+                            base.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                         }
-                    });
-                } else {
-                    // initiate the animation
-                    runEnterAnimation();
-                }
+                        runEnterAnimation();
+                    }
+                });
+            } else {
+                // initiate the animation
+                runEnterAnimation();
             }
         }
         // Kick off the photo list loader
@@ -1038,6 +1034,10 @@ public class PhotoViewActivity extends SherlockFragmentActivity implements
                     // We just loaded the initial thumbnail that we can display
                     // while waiting for the full viewPager to get initialized.
                     initTemporaryImage(bitmap);
+                    // Destroy the loader so we don't attempt to load the thumbnail
+                    // again on screen rotations.
+                    getSupportLoaderManager().destroyLoader(
+                            PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL);
                     break;
                 case PhotoViewCallbacks.BITMAP_LOADER_AVATAR:
                     if (bitmap == null) {
