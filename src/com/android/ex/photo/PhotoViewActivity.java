@@ -256,12 +256,10 @@ public class PhotoViewActivity extends SherlockFragmentActivity implements
         if (!mScaleAnimationEnabled || mEnterAnimationFinished) {
             // We are not running the scale up animation. Just let the fragments
             // display and handle the animation.
-            // Kick off the photo list loader. For performance, we only do this if we're
-            // not displaying the temporary image. We need that to be as fast as possible.
-            // Once the temporary image is displayed we can initiate the regular loader.
-            // If we are displaying the temporary image, this will be kicked off after
-            // the initial animation completes.
             getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
+            // Make the background opaque immediately so that we don't see the activity
+            // behind this one.
+            mBackground.setVisibility(View.VISIBLE);
         } else {
             // Attempt to load the initial image thumbnail. Once we have the
             // image, animate it up. Once the animation is complete, we can kick off
@@ -332,6 +330,7 @@ public class PhotoViewActivity extends SherlockFragmentActivity implements
         outState.putBoolean(STATE_FULLSCREEN_KEY, mFullScreen);
         outState.putString(STATE_ACTIONBARTITLE_KEY, mActionBarTitle);
         outState.putString(STATE_ACTIONBARSUBTITLE_KEY, mActionBarSubtitle);
+        outState.putBoolean(STATE_ENTERANIMATIONFINISHED_KEY, mEnterAnimationFinished);
     }
 
     @Override
