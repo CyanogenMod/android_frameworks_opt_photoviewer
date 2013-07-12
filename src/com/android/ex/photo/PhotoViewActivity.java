@@ -310,7 +310,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    public void onLoadFinished(final Loader<Cursor> loader, final Cursor data) {
         final int id = loader.getId();
         if (id == LOADER_PHOTO_LIST) {
             if (data == null || data.getCount() == 0) {
@@ -320,10 +320,15 @@ public class PhotoViewActivity extends FragmentActivity implements
 
                 if (mInitialPhotoUri != null) {
                     int index = 0;
-                    int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
+                    final int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
                     while (data.moveToNext()) {
-                        String uri = data.getString(uriIndex);
-                        if (TextUtils.equals(uri, mInitialPhotoUri)) {
+                        final String uriString = data.getString(uriIndex);
+
+                        // Clear query params. Compare only the path.
+                        final Uri initialPhotoUri = Uri.parse(mInitialPhotoUri).buildUpon()
+                                .clearQuery().build();
+                        final Uri uri = Uri.parse(uriString).buildUpon().clearQuery().build();
+                        if (initialPhotoUri != null && initialPhotoUri.equals(uri)) {
                             mInitialPhotoUri = null;
                             mPhotoIndex = index;
                             break;
