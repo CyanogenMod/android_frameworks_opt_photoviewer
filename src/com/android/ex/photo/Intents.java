@@ -36,6 +36,7 @@ public class Intents {
     public static final String EXTRA_PROJECTION = "projection";
     public static final String EXTRA_THUMBNAIL_URI = "thumbnail_uri";
     public static final String EXTRA_MAX_INITIAL_SCALE = "max_scale";
+    public static final String EXTRA_WATCH_NETWORK = "watch_network";
 
     /**
      * Gets a photo view intent builder to display the photos from phone activity.
@@ -81,6 +82,10 @@ public class Intents {
         private String mThumbnailUri;
         /** The maximum scale to display images at before  */
         private Float mMaxInitialScale;
+        /**
+         * True if the PhotoViewFragments should watch for network changes to restart their loaders
+         */
+        private boolean mWatchNetwork;
 
         private PhotoViewIntentBuilder(Context context, Class<?> cls) {
             mIntent = new Intent(context, cls);
@@ -136,6 +141,16 @@ public class Intents {
             return this;
         }
 
+        /**
+         * Enable watching the network for connectivity changes.
+         *
+         * When a change is detected, bitmap loaders will be restarted if required.
+         */
+        public PhotoViewIntentBuilder watchNetworkConnectivityChanges() {
+            mWatchNetwork = true;
+            return this;
+        }
+
         /** Build the intent */
         public Intent build() {
             mIntent.setAction(Intent.ACTION_VIEW);
@@ -173,6 +188,10 @@ public class Intents {
 
             if (mMaxInitialScale != null) {
                 mIntent.putExtra(EXTRA_MAX_INITIAL_SCALE, mMaxInitialScale);
+            }
+
+            if (mWatchNetwork == true) {
+                mIntent.putExtra(EXTRA_WATCH_NETWORK, true);
             }
 
             return mIntent;

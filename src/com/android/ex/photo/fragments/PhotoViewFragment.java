@@ -106,6 +106,8 @@ public class PhotoViewFragment extends Fragment implements
     protected PhotoViewCallbacks mCallback;
     protected PhotoPagerAdapter mAdapter;
 
+    protected BroadcastReceiver mInternetStateReceiver;
+
     protected PhotoView mPhotoView;
     protected ImageView mPhotoPreviewImage;
     protected TextView mEmptyText;
@@ -116,6 +118,11 @@ public class PhotoViewFragment extends Fragment implements
 
     /** Whether or not the fragment should make the photo full-screen */
     protected boolean mFullScreen;
+
+    /**
+     * True if the PhotoViewFragment should watch the network state in order to restart loaders.
+     */
+    protected boolean mWatchNetworkState;
 
     /** Whether or not this fragment will only show the loading spinner */
     protected boolean mOnlyShowSpinner;
@@ -162,11 +169,6 @@ public class PhotoViewFragment extends Fragment implements
         mAdapter = mCallback.getAdapter();
         if (mAdapter == null) {
             throw new IllegalStateException("Callback reported null adapter");
-        }
-
-        if (hasNetworkStatePermission()) {
-            getActivity().registerReceiver(new InternetStateBroadcastReceiver(),
-                    new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
         }
         // Don't call until we've setup the entire view
         setViewVisibility();
@@ -221,6 +223,7 @@ public class PhotoViewFragment extends Fragment implements
         if (mIntent != null) {
             mResolvedPhotoUri = mIntent.getStringExtra(Intents.EXTRA_RESOLVED_PHOTO_URI);
             mThumbnailUri = mIntent.getStringExtra(Intents.EXTRA_THUMBNAIL_URI);
+            mWatchNetworkState = mIntent.getBooleanExtra(Intents.EXTRA_WATCH_NETWORK, false);
         }
     }
 
@@ -260,7 +263,12 @@ public class PhotoViewFragment extends Fragment implements
         mCallback.addScreenListener(mPosition, this);
         mCallback.addCursorListener(this);
 
-        if (hasNetworkStatePermission()) {
+        if (mWatchNetworkState) {
+            if (mInternetStateReceiver == null) {
+                mInternetStateReceiver = new InternetStateBroadcastReceiver();
+            }
+            getActivity().registerReceiver(mInternetStateReceiver,
+                    new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
             ConnectivityManager connectivityManager = (ConnectivityManager)
                     getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
@@ -285,6 +293,9 @@ public class PhotoViewFragment extends Fragment implements
     @Override
     public void onPause() {
         // Remove listeners
+        if (mWatchNetworkState) {
+            getActivity().unregisterReceiver(mInternetStateReceiver);
+        }
         mCallback.removeCursorListener(this);
         mCallback.removeScreenListener(mPosition);
         resetPhotoView();
@@ -556,11 +567,11 @@ public class PhotoViewFragment extends Fragment implements
             ConnectivityManager connectivityManager = (ConnectivityManager)
                     context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
-            if (activeNetInfo == null) {
+            if (activeNetInfo == null || !activeNetInfo.isConnected()) {
                 mConnected = false;
                 return;
             }
-            if (mConnected == false && activeNetInfo.isConnected() && !isPhotoBound()) {
+            if (mConnected == false && !isPhotoBound()) {
                 if (mThumbnailShown == false) {
                     getLoaderManager().restartLoader(LOADER_ID_THUMBNAIL, null,
                             PhotoViewFragment.this);
