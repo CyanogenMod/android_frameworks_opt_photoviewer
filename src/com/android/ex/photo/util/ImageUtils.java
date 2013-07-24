@@ -29,7 +29,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.android.ex.photo.PhotoViewActivity;
-import com.android.ex.photo.util.Exif;
+import com.android.ex.photo.loaders.PhotoBitmapLoader.BitmapResult;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -97,15 +97,17 @@ public class ImageUtils {
      *
      * @return The new bitmap or null
      */
-    public static Bitmap createLocalBitmap(ContentResolver resolver, Uri uri, int maxSize) {
+    public static BitmapResult createLocalBitmap(ContentResolver resolver, Uri uri, int maxSize) {
         // TODO: make this method not download the image for both getImageBounds and decodeStream
+        BitmapResult result = new BitmapResult();
         InputStream inputStream = null;
         try {
             final BitmapFactory.Options opts = new BitmapFactory.Options();
             final Point bounds = getImageBounds(resolver, uri);
             inputStream = openInputStream(resolver, uri);
             if (bounds == null || inputStream == null) {
-                return null;
+                result.status = BitmapResult.STATUS_EXCEPTION;
+                return result;
             }
             opts.inSampleSize = Math.max(bounds.x / maxSize, bounds.y / maxSize);
 
@@ -114,14 +116,18 @@ public class ImageUtils {
             // Correct thumbnail orientation as necessary
             // TODO: Fix rotation if it's actually a problem
             //return rotateBitmap(resolver, uri, decodedBitmap);
-            return decodedBitmap;
+            result.bitmap = decodedBitmap;
+            result.status = BitmapResult.STATUS_SUCCESS;
+            return result;
 
         } catch (FileNotFoundException exception) {
             // Do nothing - the photo will appear to be missing
         } catch (IOException exception) {
-            // Do nothing - the photo will appear to be missing
+            result.status = BitmapResult.STATUS_EXCEPTION;
         } catch (IllegalArgumentException exception) {
             // Do nothing - the photo will appear to be missing
+        } catch (SecurityException exception) {
+            result.status = BitmapResult.STATUS_EXCEPTION;
         } finally {
             try {
                 if (inputStream != null) {
@@ -130,7 +136,7 @@ public class ImageUtils {
             } catch (IOException ignore) {
             }
         }
-        return null;
+        return result;
     }
 
     /**
@@ -172,6 +178,12 @@ public class ImageUtils {
 
             final Bitmap originalBitmap = BitmapFactory.decodeStream(byteStream, outPadding, opts);
 
+            if (byteStream != null && originalBitmap == null && !opts.inJustDecodeBounds) {
+                Log.w(TAG, "ImageUtils#decodeStream(InputStream, Rect, Options): "
+                        + "Image bytes cannot be decoded into a Bitmap");
+                throw new UnsupportedOperationException(
+                        "Image bytes cannot be decoded into a Bitmap.");
+            }
             if (originalBitmap != null && orientation != 0) {
                 final Matrix matrix = new Matrix();
                 matrix.postRotate(orientation);

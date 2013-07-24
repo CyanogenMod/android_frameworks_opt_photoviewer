@@ -17,6 +17,7 @@
 
 package com.android.ex.photo;
 
+import android.app.Activity;
 import android.content.ContentProvider;
 import android.content.Context;
 import android.content.Intent;
@@ -29,7 +30,7 @@ import com.android.ex.photo.fragments.PhotoViewFragment;
 public class Intents {
     // Intent extras
     public static final String EXTRA_PHOTO_INDEX = "photo_index";
-    public static final String EXTRA_PHOTO_ID = "photo_id";
+    public static final String EXTRA_INITIAL_PHOTO_URI = "initial_photo_uri";
     public static final String EXTRA_PHOTOS_URI = "photos_uri";
     public static final String EXTRA_RESOLVED_PHOTO_URI = "resolved_photo_uri";
     public static final String EXTRA_PROJECTION = "projection";
@@ -58,7 +59,7 @@ public class Intents {
 
     /** Gets a new photo view intent builder */
     public static PhotoViewIntentBuilder newPhotoViewIntentBuilder(
-            Context context, Class<? extends PhotoViewActivity> cls) {
+            Context context, Class<? extends Activity> cls) {
         return new PhotoViewIntentBuilder(context, cls);
     }
 
@@ -68,6 +69,8 @@ public class Intents {
 
         /** The index of the photo to show */
         private Integer mPhotoIndex;
+        /** The URI of the initial photo to show */
+        private String mInitialPhotoUri;
         /** The URI of the group of photos to display */
         private String mPhotosUri;
         /** The URL of the photo to display */
@@ -86,6 +89,12 @@ public class Intents {
         /** Sets the photo index */
         public PhotoViewIntentBuilder setPhotoIndex(Integer photoIndex) {
             mPhotoIndex = photoIndex;
+            return this;
+        }
+
+        /** Sets the initial photo URI */
+        public PhotoViewIntentBuilder setInitialPhotoUri(String initialPhotoUri) {
+            mInitialPhotoUri = initialPhotoUri;
             return this;
         }
 
@@ -135,6 +144,15 @@ public class Intents {
 
             if (mPhotoIndex != null) {
                 mIntent.putExtra(EXTRA_PHOTO_INDEX, (int) mPhotoIndex);
+            }
+
+            if (mInitialPhotoUri != null) {
+                mIntent.putExtra(EXTRA_INITIAL_PHOTO_URI, mInitialPhotoUri);
+            }
+
+            if (mInitialPhotoUri != null && mPhotoIndex != null) {
+                throw new IllegalStateException(
+                        "specified both photo index and photo uri");
             }
 
             if (mPhotosUri != null) {
