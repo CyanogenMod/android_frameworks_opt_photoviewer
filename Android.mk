@@ -18,7 +18,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libphotoviewer
 
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-v4 \
-    ActionBarSherlock
+	android-support-v7-appcompat
 
 LOCAL_SDK_VERSION := 16
 LOCAL_SRC_FILES := \

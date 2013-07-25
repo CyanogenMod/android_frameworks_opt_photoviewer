@@ -27,6 +27,7 @@ import com.android.ex.photo.fragments.PhotoViewFragment;
 /**
  * Build intents to start app activities
  */
+
 public class Intents {
     // Intent extras
     public static final String EXTRA_PHOTO_INDEX = "photo_index";
@@ -41,10 +42,10 @@ public class Intents {
 
     // Parameters affecting the intro/exit animation
     public static final String EXTRA_SCALE_UP_ANIMATION = "scale_up_animation";
-    public static final String EXTRA_ANIMATION_START_X= "start_x_extra";
-    public static final String EXTRA_ANIMATION_START_Y= "start_y_extra";
-    public static final String EXTRA_ANIMATION_START_WIDTH= "start_width_extra";
-    public static final String EXTRA_ANIMATION_START_HEIGHT= "start_height_extra";
+    public static final String EXTRA_ANIMATION_START_X = "start_x_extra";
+    public static final String EXTRA_ANIMATION_START_Y = "start_y_extra";
+    public static final String EXTRA_ANIMATION_START_WIDTH = "start_width_extra";
+    public static final String EXTRA_ANIMATION_START_HEIGHT = "start_height_extra";
 
     // Parameters affecting the display and features
     public static final String EXTRA_ACTION_BAR_HIDDEN_INITIALLY = "action_bar_hidden_initially";

@@ -32,9 +32,13 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBar.OnMenuVisibilityListener;
+import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -48,10 +52,6 @@ import android.view.animation.TranslateAnimation;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.ImageView;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.ActionBar.OnMenuVisibilityListener;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.MenuItem;
 import com.android.ex.photo.PhotoViewPager.InterceptType;
 import com.android.ex.photo.PhotoViewPager.OnInterceptTouchListener;
 import com.android.ex.photo.adapters.PhotoPagerAdapter;
@@ -69,7 +69,7 @@ import java.util.Set;
 /**
  * Activity to view the contents of an album.
  */
-public class PhotoViewActivity extends SherlockFragmentActivity implements
+public class PhotoViewActivity extends ActionBarActivity implements
         LoaderManager.LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
         OnMenuVisibilityListener, PhotoViewCallbacks {
 
@@ -82,9 +82,9 @@ public class PhotoViewActivity extends SherlockFragmentActivity implements
     private final static String STATE_FULLSCREEN_KEY =
             "com.google.android.apps.plus.PhotoViewFragment.FULLSCREEN";
     private final static String STATE_ACTIONBARTITLE_KEY =
-            "com.google.android.apps.plus.PhotoViewFragment.mActionBarTitle";
+            "com.google.android.apps.plus.PhotoViewFragment.ACTIONBARTITLE";
     private final static String STATE_ACTIONBARSUBTITLE_KEY =
-            "com.google.android.apps.plus.PhotoViewFragment.mActionBarSubtitle";
+            "com.google.android.apps.plus.PhotoViewFragment.ACTIONBARTITLE";
     private final static String STATE_ENTERANIMATIONFINISHED_KEY =
             "com.google.android.apps.plus.PhotoViewFragment.SCALEANIMATIONFINISHED";
 

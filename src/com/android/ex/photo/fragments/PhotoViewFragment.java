@@ -26,6 +26,7 @@ import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.util.DisplayMetrics;
@@ -38,7 +39,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockFragment;
+
 import com.android.ex.photo.Intents;
 import com.android.ex.photo.PhotoViewCallbacks;
 import com.android.ex.photo.PhotoViewCallbacks.CursorChangedListener;
@@ -54,7 +55,7 @@ import com.android.ex.photo.views.ProgressBarWrapper;
 /**
  * Displays a photo.
  */
-public class PhotoViewFragment extends SherlockFragment implements
+public class PhotoViewFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<BitmapResult>,
         OnClickListener,
         OnScreenListener,
