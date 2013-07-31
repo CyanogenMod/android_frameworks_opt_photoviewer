@@ -227,7 +227,6 @@ public class ImageUtils {
             throws IOException {
         final BitmapFactory.Options opts = new BitmapFactory.Options();
         InputStream inputStream = null;
-        String scheme = uri.getScheme();
         try {
             opts.inJustDecodeBounds = true;
             inputStream = openInputStream(resolver, uri);

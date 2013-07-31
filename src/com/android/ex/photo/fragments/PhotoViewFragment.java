@@ -21,7 +21,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
@@ -405,12 +404,6 @@ public class PhotoViewFragment extends Fragment implements
             mPhotoPreviewAndProgress.setVisibility(View.GONE);
             mProgressBarNeeded = false;
         }
-    }
-
-    private boolean hasNetworkStatePermission() {
-        final String networkStatePermission = "android.permission.ACCESS_NETWORK_STATE";
-        int result = getActivity().checkCallingOrSelfPermission(networkStatePermission);
-        return result == PackageManager.PERMISSION_GRANTED;
     }
 
     /**
