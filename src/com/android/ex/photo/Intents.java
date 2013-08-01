@@ -180,6 +180,7 @@ public class Intents {
          */
         public PhotoViewIntentBuilder watchNetworkConnectivityChanges() {
             mWatchNetwork = true;
+            return this;
         }
 
         public PhotoViewIntentBuilder setScaleAnimation(int startX, int startY,
