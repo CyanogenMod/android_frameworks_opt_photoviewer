@@ -737,6 +737,10 @@ public class PhotoViewActivity extends ActionBarActivity implements
         // do nothing
     }
 
+    protected void setPhotoIndex(int index) {
+        mCurrentPhotoIndex = index;
+    }
+
     @Override
     public void onFragmentPhotoLoadComplete(PhotoViewFragment fragment, boolean success) {
         if (mTemporaryImage.getVisibility() != View.GONE &&
