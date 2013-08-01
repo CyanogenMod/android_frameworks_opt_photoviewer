@@ -424,11 +424,12 @@ public class PhotoViewActivity extends ActionBarActivity implements
                 mAlbumCount = data.getCount();
                 if (mCurrentPhotoUri != null) {
                     int index = 0;
-                    final int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
                     // Clear query params. Compare only the path.
-                    final Uri initialPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
-                            .clearQuery().build();
+                    final int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
+                    final Uri currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
+                        .clearQuery().build();
                     while (data.moveToNext()) {
+			final String uriString = data.getString(uriIndex)
                         final Uri uri = Uri.parse(uriString).buildUpon().clearQuery().build();
                         if (currentPhotoUri != null && currentPhotoUri.equals(uri)) {
                             mCurrentPhotoIndex = index;
