@@ -429,7 +429,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
                     final Uri currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
                         .clearQuery().build();
                     while (data.moveToNext()) {
-			final String uriString = data.getString(uriIndex)
+			final String uriString = data.getString(uriIndex);
                         final Uri uri = Uri.parse(uriString).buildUpon().clearQuery().build();
                         if (currentPhotoUri != null && currentPhotoUri.equals(uri)) {
                             mCurrentPhotoIndex = index;
