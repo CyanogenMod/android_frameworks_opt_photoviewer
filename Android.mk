@@ -13,19 +13,21 @@
 # limitations under the License.
 
 LOCAL_PATH := $(call my-dir)
+res_dirs := res ../../support/v7/appcompat/res
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libphotoviewer
 
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-v4 \
-	android-support-v7-appcompat
+    android-support-v7-appcompat
 
-LOCAL_SDK_VERSION := 16
+LOCAL_SDK_VERSION := 18
 LOCAL_SRC_FILES := \
      $(call all-java-files-under, src) \
      $(call all-logtags-files-under, src)
 
-LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
+LOCAL_RESOURCE_DIR := $(addprefix $(LOCAL_PATH)/, $(res_dirs))
+LOCAL_AAPT_FLAGS := --auto-add-overlay
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 

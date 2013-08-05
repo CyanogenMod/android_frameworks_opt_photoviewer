@@ -32,8 +32,6 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
 import android.support.v7.app.ActionBar;
@@ -808,7 +806,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
                 totalHeight, scale);
 
         final int version = android.os.Build.VERSION.SDK_INT;
-        if (version >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+        if (version >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             mBackground.setAlpha(0f);
             mBackground.animate().alpha(1f).setDuration(ENTER_ANIMATION_DURATION_MS).start();
             mBackground.setVisibility(View.VISIBLE);
@@ -826,7 +824,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
             };
             ViewPropertyAnimator animator = mTemporaryImage.animate().scaleX(1f).scaleY(1f)
                 .translationX(0).translationY(0).setDuration(ENTER_ANIMATION_DURATION_MS);
-            if (version >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            if (version >= Build.VERSION_CODES.JELLY_BEAN) {
                 animator.withEndAction(endRunnable);
             } else {
                 mHandler.postDelayed(endRunnable, ENTER_ANIMATION_DURATION_MS);
@@ -889,7 +887,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
         final int translateY = calculateTranslate(mAnimationStartY, mAnimationStartHeight,
                 totalHeight, scale);
         final int version = android.os.Build.VERSION.SDK_INT;
-        if (version >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+        if (version >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             mBackground.animate().alpha(0f).setDuration(EXIT_ANIMATION_DURATION_MS).start();
             mBackground.setVisibility(View.VISIBLE);
 

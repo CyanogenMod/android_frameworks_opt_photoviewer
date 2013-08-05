@@ -17,14 +17,16 @@
 -->
 
 <resources>
-    <style name="PhotoViewTheme" parent="android:Theme.Holo">
+    <style name="PhotoViewTheme" parent="Theme.AppCompat">
         <item name="android:windowNoTitle">false</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowBackground">@color/solid_black</item>
-        <item name="android:actionBarStyle">@style/Holo.ActionBar</item>
+        <item name="actionBarStyle">@style/AppCompat.ActionBar</item>
+        <item name="android:actionBarStyle">@style/AppCompat.ActionBar</item>
     </style>
-    <style name="Holo.ActionBar" parent="android:Widget.Holo.ActionBar">
+    <style name="AppCompat.ActionBar" parent="Widget.AppCompat.ActionBar">
+        <item name="background">@drawable/actionbar_translucent</item>
         <item name="android:background">@drawable/actionbar_translucent</item>
     </style>
 </resources>
