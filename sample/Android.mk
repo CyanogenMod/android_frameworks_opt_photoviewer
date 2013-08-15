@@ -15,7 +15,7 @@
 LOCAL_PATH:= $(call my-dir)
 
 #Include res dir from photoviewer
-photo_dir := ../res
+photo_dir := ../res ../appcompat/res
 res_dirs := $(photo_dir) res ../../../support/v7/appcompat/res
 
 ##################################################
@@ -25,7 +25,7 @@ include $(CLEAR_VARS)
 src_dirs := src
 LOCAL_PACKAGE_NAME := LibPhotoViewerSample
 
-LOCAL_STATIC_JAVA_LIBRARIES += libphotoviewer
+LOCAL_STATIC_JAVA_LIBRARIES += libphotoviewer_appcompat
 LOCAL_STATIC_JAVA_LIBRARIES += android-common
 LOCAL_STATIC_JAVA_LIBRARIES += android-support-v4
 LOCAL_STATIC_JAVA_LIBRARIES += android-support-v13
