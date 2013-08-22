@@ -167,7 +167,6 @@ public class Exif {
             }
         }
 
-        Log.i(TAG, "Orientation not found");
         return 0;
     }
 
