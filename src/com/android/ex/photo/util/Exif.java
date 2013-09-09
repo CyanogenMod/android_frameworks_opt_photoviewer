@@ -68,6 +68,15 @@ public class Exif {
         int offset = 0;
         int length = 0;
 
+        if (has(jpeg, byteSize, 1)) {
+            // JPEG image files begin with FF D8. Only JPEG images have EXIF data.
+            final boolean possibleJpegFormat = jpeg.get(0) == (byte) 0xFF
+                    && jpeg.get(1) == (byte) 0xD8;
+            if (!possibleJpegFormat) {
+                return 0;
+            }
+        }
+
         // ISO/IEC 10918-1:1993(E)
         while (has(jpeg, byteSize, offset + 3) && (jpeg.get(offset++) & 0xFF) == 0xFF) {
             final int marker = jpeg.get(offset) & 0xFF;
