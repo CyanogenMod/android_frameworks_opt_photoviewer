@@ -68,15 +68,6 @@
         android:textColor="@android:color/white"
         android:visibility="gone" />
 
-    <ImageView
-        android:id="@+id/retry_button"
-        android:layout_width="@dimen/retry_button_size"
-        android:layout_height="@dimen/retry_button_size"
-        android:layout_below="@id/empty_text"
-        android:layout_centerHorizontal="true"
-        android:background="?android:attr/selectableItemBackground"
-        android:scaleType="center"
-        android:src="@drawable/ic_menu_refresh_holo_dark"
-        android:visibility="gone" />
-
+    <!-- retry button might use a background that is ICS+ so include it from the right layout -->
+    <include layout="@layout/photo_retry_button" />
 </RelativeLayout>
