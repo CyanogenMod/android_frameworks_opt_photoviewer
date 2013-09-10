@@ -425,11 +425,22 @@ public class PhotoViewActivity extends FragmentActivity implements
                     int index = 0;
                     // Clear query params. Compare only the path.
                     final int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
-                    final Uri currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
-                        .clearQuery().build();
+                    final Uri currentPhotoUri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                        currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
+                                .clearQuery().build();
+                    } else {
+                        currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
+                                .query(null).build();
+                    }
                     while (data.moveToNext()) {
-			final String uriString = data.getString(uriIndex);
-                        final Uri uri = Uri.parse(uriString).buildUpon().clearQuery().build();
+                        final String uriString = data.getString(uriIndex);
+                        final Uri uri;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                            uri = Uri.parse(uriString).buildUpon().clearQuery().build();
+                        } else {
+                            uri = Uri.parse(uriString).buildUpon().query(null).build();
+                        }
                         if (currentPhotoUri != null && currentPhotoUri.equals(uri)) {
                             mCurrentPhotoIndex = index;
                             break;
