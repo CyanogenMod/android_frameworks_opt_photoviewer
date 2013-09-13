@@ -570,6 +570,10 @@ public class PhotoViewFragment extends Fragment implements
         }
     }
 
+    public int getPosition() {
+        return mPosition;
+    }
+
     public ProgressBarWrapper getPhotoProgressBar() {
         return mPhotoProgressBar;
     }
