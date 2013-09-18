@@ -28,7 +28,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.view.GestureDetectorCompat;
-import android.support.v4.view.ScaleGestureDetectorCompat;
 import android.util.AttributeSet;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.GestureDetector.OnDoubleTapListener;
@@ -175,11 +174,6 @@ public class PhotoView extends View implements OnGestureListener,
     private float mDownFocusX;
     private float mDownFocusY;
 
-    /**
-     * Whether the QuickSale gesture is enabled.
-     */
-    private boolean mQuickScaleEnabled;
-
     public PhotoView(Context context) {
         super(context);
         initialize();
@@ -221,9 +215,6 @@ public class PhotoView extends View implements OnGestureListener,
     @Override
     public boolean onDoubleTap(MotionEvent e) {
         mDoubleTapOccurred = true;
-        if (!mQuickScaleEnabled) {
-            return scale(e);
-        }
         return false;
     }
 
@@ -234,18 +225,28 @@ public class PhotoView extends View implements OnGestureListener,
 
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                if (mQuickScaleEnabled) {
-                    mDownFocusX = e.getX();
-                    mDownFocusY = e.getY();
-                }
+                mDownFocusX = e.getX();
+                mDownFocusY = e.getY();
                 break;
             case MotionEvent.ACTION_UP:
-                if (mQuickScaleEnabled) {
-                    handled = scale(e);
+                if (mDoubleTapToZoomEnabled && mTransformsEnabled && mDoubleTapOccurred) {
+                    if (!mDoubleTapDebounce) {
+                        float currentScale = getScale();
+                        float targetScale = currentScale * DOUBLE_TAP_SCALE_FACTOR;
+
+                        // Ensure the target scale is within our bounds
+                        targetScale = Math.max(mMinScale, targetScale);
+                        targetScale = Math.min(mMaxScale, targetScale);
+
+                        mScaleRunnable.start(currentScale, targetScale, e.getX(), e.getY());
+                    }
+                    mDoubleTapDebounce = false;
                 }
+                handled = true;
+                mDoubleTapOccurred = false;
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (mQuickScaleEnabled && mDoubleTapOccurred) {
+                if (mDoubleTapOccurred) {
                     final int deltaX = (int) (e.getX() - mDownFocusX);
                     final int deltaY = (int) (e.getY() - mDownFocusY);
                     int distance = (deltaX * deltaX) + (deltaY * deltaY);
@@ -256,26 +257,6 @@ public class PhotoView extends View implements OnGestureListener,
                 break;
 
         }
-        return handled;
-    }
-
-    private boolean scale(MotionEvent e) {
-        boolean handled = false;
-        if (mDoubleTapToZoomEnabled && mTransformsEnabled && mDoubleTapOccurred) {
-            if (!mDoubleTapDebounce) {
-                float currentScale = getScale();
-                float targetScale = currentScale * DOUBLE_TAP_SCALE_FACTOR;
-
-                // Ensure the target scale is within our bounds
-                targetScale = Math.max(mMinScale, targetScale);
-                targetScale = Math.min(mMaxScale, targetScale);
-
-                mScaleRunnable.start(currentScale, targetScale, e.getX(), e.getY());
-                handled = true;
-            }
-            mDoubleTapDebounce = false;
-        }
-        mDoubleTapOccurred = false;
         return handled;
     }
 
@@ -1006,7 +987,6 @@ public class PhotoView extends View implements OnGestureListener,
 
         mGestureDetector = new GestureDetectorCompat(context, this, null);
         mScaleGetureDetector = new ScaleGestureDetector(context, this);
-        mQuickScaleEnabled = ScaleGestureDetectorCompat.isQuickScaleEnabled(mScaleGetureDetector);
         mScaleRunnable = new ScaleRunnable(this);
         mTranslateRunnable = new TranslateRunnable(this);
         mSnapRunnable = new SnapRunnable(this);
