@@ -22,7 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -39,15 +39,14 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-
 import com.android.ex.photo.Intents;
 import com.android.ex.photo.PhotoViewCallbacks;
 import com.android.ex.photo.PhotoViewCallbacks.CursorChangedListener;
 import com.android.ex.photo.PhotoViewCallbacks.OnScreenListener;
 import com.android.ex.photo.R;
 import com.android.ex.photo.adapters.PhotoPagerAdapter;
-import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface.BitmapResult;
 import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface;
+import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface.BitmapResult;
 import com.android.ex.photo.util.ImageUtils;
 import com.android.ex.photo.views.PhotoView;
 import com.android.ex.photo.views.ProgressBarWrapper;
@@ -353,7 +352,7 @@ public class PhotoViewFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
-        Bitmap data = result.bitmap;
+        Drawable data = result.getDrawable(getResources());
         // If we don't have a view, the fragment has been paused. We'll get the cursor again later.
         if (getView() == null) {
             return;
@@ -377,7 +376,7 @@ public class PhotoViewFragment extends Fragment implements
                         mThumbnailShown = false;
                     } else {
                         // show preview
-                        mPhotoPreviewImage.setImageBitmap(data);
+                        mPhotoPreviewImage.setImageDrawable(data);
                         mThumbnailShown = true;
                     }
                     mPhotoPreviewImage.setVisibility(View.VISIBLE);
@@ -407,7 +406,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     private void displayPhoto(BitmapResult result) {
-        Bitmap data = result.bitmap;
+        Drawable data = result.getDrawable(getResources());
         if (result.status == BitmapResult.STATUS_EXCEPTION) {
             mProgressBarNeeded = false;
             mEmptyText.setText(R.string.failed);
@@ -422,10 +421,10 @@ public class PhotoViewFragment extends Fragment implements
     /**
      * Binds an image to the photo view.
      */
-    private void bindPhoto(Bitmap bitmap) {
-        if (bitmap != null) {
+    private void bindPhoto(Drawable drawable) {
+        if (drawable != null) {
             if (mPhotoView != null) {
-                mPhotoView.bindPhoto(bitmap);
+                mPhotoView.bindDrawable(drawable);
             }
             enableImageTransforms(true);
             mPhotoPreviewAndProgress.setVisibility(View.GONE);
