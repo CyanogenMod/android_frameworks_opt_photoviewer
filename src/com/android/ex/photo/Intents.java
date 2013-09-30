@@ -77,6 +77,12 @@ public class Intents {
         return new PhotoViewIntentBuilder(context, cls);
     }
 
+    /** Gets a new photo view intent builder */
+    public static PhotoViewIntentBuilder newPhotoViewIntentBuilder(
+            Context context, String activityName) {
+        return new PhotoViewIntentBuilder(context, activityName);
+    }
+
     /** Builder to create a photo view intent */
     public static class PhotoViewIntentBuilder {
         private final Intent mIntent;
@@ -118,6 +124,16 @@ public class Intents {
 
         private PhotoViewIntentBuilder(Context context, Class<?> cls) {
             mIntent = new Intent(context, cls);
+            initialize();
+        }
+
+        private PhotoViewIntentBuilder(Context context, String activityName) {
+            mIntent = new Intent();
+            mIntent.setClassName(context, activityName);
+            initialize();
+        }
+
+        private void initialize() {
             mScaleAnimation = false;
             mActionBarHiddenInitially = false;
             mDisplayFullScreenThumbs = false;
