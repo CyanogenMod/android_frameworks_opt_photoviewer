@@ -993,7 +993,7 @@ public class PhotoViewActivity extends FragmentActivity implements
             // Forget this, we've already run the animation.
             return;
         }
-        mTemporaryImage.setImageBitmap(drawable);
+        mTemporaryImage.setImageDrawable(drawable);
         if (drawable != null) {
             // We have not yet run the enter animation. Start it now.
             int totalWidth = mRootView.getMeasuredWidth();
