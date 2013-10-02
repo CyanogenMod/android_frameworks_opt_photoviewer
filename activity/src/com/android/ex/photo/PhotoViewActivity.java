@@ -27,6 +27,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -987,13 +988,13 @@ public class PhotoViewActivity extends FragmentActivity implements
         return start - scaleFromEdge - blankSize;
     }
 
-    private void initTemporaryImage(Bitmap bitmap) {
+    private void initTemporaryImage(Drawable drawable) {
         if (mEnterAnimationFinished) {
             // Forget this, we've already run the animation.
             return;
         }
-        mTemporaryImage.setImageBitmap(bitmap);
-        if (bitmap != null) {
+        mTemporaryImage.setImageBitmap(drawable);
+        if (drawable != null) {
             // We have not yet run the enter animation. Start it now.
             int totalWidth = mRootView.getMeasuredWidth();
             if (totalWidth == 0) {
@@ -1041,23 +1042,22 @@ public class PhotoViewActivity extends FragmentActivity implements
 
         @Override
         public void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
-            Bitmap bitmap = result.bitmap;
+            Drawable drawable = result.getDrawable(getResources());
             final ActionBar actionBar = getActionBar();
             switch (loader.getId()) {
                 case PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL:
                     // We just loaded the initial thumbnail that we can display
                     // while waiting for the full viewPager to get initialized.
-                    initTemporaryImage(bitmap);
+                    initTemporaryImage(drawable);
                     // Destroy the loader so we don't attempt to load the thumbnail
                     // again on screen rotations.
                     getSupportLoaderManager().destroyLoader(
                             PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL);
                     break;
                 case PhotoViewCallbacks.BITMAP_LOADER_AVATAR:
-                    if (bitmap == null) {
+                    if (drawable == null) {
                         actionBar.setLogo(null);
                     } else {
-                        BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
                         actionBar.setLogo(drawable);
                     }
                     break;
