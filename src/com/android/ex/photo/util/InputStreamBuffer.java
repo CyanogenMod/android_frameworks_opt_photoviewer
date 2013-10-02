@@ -232,7 +232,9 @@ public class InputStreamBuffer {
             mFilled = 0;
         }
 
-        Log.d(TAG, String.format("advanceTo %d buffer: %s", i, this));
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, String.format("advanceTo %d buffer: %s", i, this));
+        }
         Trace.endSection();
     }
 
@@ -301,7 +303,9 @@ public class InputStreamBuffer {
             mInputStream = null;
         }
 
-        Log.d(TAG, String.format("fill %d      buffer: %s", i, this));
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            Log.d(TAG, String.format("fill %d      buffer: %s", i, this));
+        }
 
         Trace.endSection();
         return i < mFilled;
