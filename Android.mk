@@ -21,7 +21,7 @@ LOCAL_MODULE := libphotoviewer_appcompat
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-v4 \
     android-support-v7-appcompat
 
-LOCAL_SDK_VERSION := 18
+LOCAL_SDK_VERSION := 19
 LOCAL_SRC_FILES := \
      $(call all-java-files-under, src) \
      $(call all-java-files-under, appcompat/src) \
@@ -40,7 +40,7 @@ LOCAL_MODULE := libphotoviewer
 
 LOCAL_STATIC_JAVA_LIBRARIES := android-support-v4
 
-LOCAL_SDK_VERSION := 18
+LOCAL_SDK_VERSION := 19
 LOCAL_SRC_FILES := \
      $(call all-java-files-under, src) \
      $(call all-java-files-under, activity/src) \
