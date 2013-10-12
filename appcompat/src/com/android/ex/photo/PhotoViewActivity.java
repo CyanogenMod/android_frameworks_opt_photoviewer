@@ -70,7 +70,8 @@ import java.util.Set;
  */
 public class PhotoViewActivity extends ActionBarActivity implements
         LoaderManager.LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
-        OnMenuVisibilityListener, PhotoViewCallbacks {
+        OnMenuVisibilityListener, PhotoViewCallbacks,
+        PhotoViewController.PhotoViewControllerCallbacks {
 
     private final static String TAG = "PhotoViewActivity";
 
@@ -164,6 +165,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
     // text.
     private long mEnterFullScreenDelayTime;
 
+    private PhotoViewController mController;
 
     protected PhotoPagerAdapter createPhotoPagerAdapter(Context context,
             android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
@@ -179,6 +181,8 @@ public class PhotoViewActivity extends ActionBarActivity implements
         final ActivityManager mgr = (ActivityManager) getApplicationContext().
                 getSystemService(Activity.ACTIVITY_SERVICE);
         sMemoryClass = mgr.getMemoryClass();
+
+        mController = new PhotoViewController(this);
 
         final Intent intent = getIntent();
         // uri of the photos to view; optional
@@ -243,6 +247,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
                 createPhotoPagerAdapter(this, getSupportFragmentManager(), null, mMaxInitialScale);
         final Resources resources = getResources();
         mRootView = findViewById(R.id.photo_activity_root_view);
+        mRootView.setOnSystemUiVisibilityChangeListener(mController);
         mBackground = findViewById(R.id.photo_activity_background);
         mTemporaryImage = (ImageView) findViewById(R.id.photo_activity_temporary_image);
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
@@ -585,47 +590,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
     }
 
     protected void setLightsOutMode(boolean enabled) {
-        int flags = 0;
-        final int version = Build.VERSION.SDK_INT;
-        final ActionBar actionBar = getSupportActionBar();
-        if (enabled) {
-            if (version >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-                flags = View.SYSTEM_UI_FLAG_LOW_PROFILE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-                if (!mScaleAnimationEnabled) {
-                    // If we are using the scale animation for intro and exit,
-                    // we can't go into fullscreen mode. The issue is that the
-                    // activity that invoked this will not be in fullscreen, so
-                    // as we transition out, the background activity will be
-                    // temporarily rendered without an actionbar, and the shrinking
-                    // photo will not line up properly. After that it redraws
-                    // in the correct location, but it still looks janks.
-                    // FLAG: there may be a better way to fix this, but I don't
-                    // yet know what it is.
-                    flags |= View.SYSTEM_UI_FLAG_FULLSCREEN;
-                }
-            } else if (version >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                flags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
-            } else if (version >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-                flags = View.STATUS_BAR_HIDDEN;
-            }
-            actionBar.hide();
-        } else {
-            if (version >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-                flags = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-            } else if (version >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                flags = View.SYSTEM_UI_FLAG_VISIBLE;
-            } else if (version >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-                flags = View.STATUS_BAR_VISIBLE;
-            }
-            actionBar.show();
-        }
-
-        if (version >= Build.VERSION_CODES.HONEYCOMB) {
-            mRootView.setSystemUiVisibility(flags);
-        }
+        mController.setImmersiveMode(enabled);
     }
 
     private final Runnable mEnterFullScreenRunnable = new Runnable() {
@@ -1022,6 +987,35 @@ public class PhotoViewActivity extends ActionBarActivity implements
         // Kick off the photo list loader
         getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
     }
+
+    // START PhotoViewControllerCallbacks
+
+    @Override
+    public void showActionBar() {
+        getActionBar().show();
+    }
+
+    @Override
+    public void hideActionBar() {
+        getActionBar().hide();
+    }
+
+    @Override
+    public boolean isScaleAnimationEnabled() {
+        return mScaleAnimationEnabled;
+    }
+
+    @Override
+    public View getRootView() {
+        return mRootView;
+    }
+
+    @Override
+    public void setNotFullscreenCallbackDoNotUseThisFunction() {
+        setFullScreen(false /* fullscreen */, true /* setDelayedRunnable */);
+    }
+
+    // END PhotoViewControllerCallbacks
 
     private class BitmapCallback implements LoaderManager.LoaderCallbacks<BitmapResult> {
 
