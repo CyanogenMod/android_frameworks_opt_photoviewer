@@ -510,6 +510,13 @@ public class PhotoView extends View implements OnGestureListener,
     }
 
     /**
+     * Returns the bound drawable. May be {@code null} if no drawable is bound.
+     */
+    public Drawable getDrawable() {
+        return mDrawable;
+    }
+
+    /**
      * Gets video data associated with this item. Returns {@code null} if this is not a video.
      */
     public byte[] getVideoData() {
