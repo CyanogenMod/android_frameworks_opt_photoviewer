@@ -432,6 +432,10 @@ public class PhotoViewFragment extends Fragment implements
         }
     }
 
+    public Drawable getDrawable() {
+        return (mPhotoView != null ? mPhotoView.getDrawable() : null);
+    }
+
     /**
      * Enable or disable image transformations. When transformations are enabled, this view
      * consumes all touch events.
