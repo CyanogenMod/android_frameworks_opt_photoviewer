@@ -12,6 +12,7 @@ public class PhotoViewController implements View.OnSystemUiVisibilityChangeListe
         public void showActionBar();
         public void hideActionBar();
         public boolean isScaleAnimationEnabled();
+        public boolean isEnterAnimationFinished();
         public View getRootView();
         public void setNotFullscreenCallbackDoNotUseThisFunction();
     }
@@ -26,9 +27,14 @@ public class PhotoViewController implements View.OnSystemUiVisibilityChangeListe
         int flags = 0;
         final int version = Build.VERSION.SDK_INT;
         final boolean manuallyUpdateActionBar = version < Build.VERSION_CODES.JELLY_BEAN ||
-                mCallback.isScaleAnimationEnabled();
-        if (enabled) {
-            if (version >= Build.VERSION_CODES.KITKAT && !mCallback.isScaleAnimationEnabled()) {
+                (version < Build.VERSION_CODES.KITKAT && mCallback.isScaleAnimationEnabled());
+        if (enabled &&
+                (!mCallback.isScaleAnimationEnabled() || mCallback.isEnterAnimationFinished())) {
+            // Turning on immersive mode causes an animation. If the scale animation is enabled and
+            // the enter animation isn't yet complete, then an immersive mode animation should not
+            // occur, since two concurrent animations are very janky.
+
+            if (version >= Build.VERSION_CODES.KITKAT) {
                 flags = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE

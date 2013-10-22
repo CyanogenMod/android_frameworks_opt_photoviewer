@@ -288,7 +288,13 @@ public class PhotoViewActivity extends FragmentActivity implements
             setActionBarTitles(actionBar);
         }
 
-        setLightsOutMode(mFullScreen);
+        if (!mScaleAnimationEnabled) {
+            setLightsOutMode(mFullScreen);
+        } else {
+            // Keep lights out mode as false. This is to prevent jank cause by concurrent
+            // animations during the enter animation.
+            setLightsOutMode(false);
+        }
     }
 
     @Override
@@ -752,6 +758,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     public void onEnterAnimationComplete() {
         mEnterAnimationFinished = true;
         mViewPager.setVisibility(View.VISIBLE);
+        setLightsOutMode(mFullScreen);
     }
 
     private void onExitAnimationComplete() {
@@ -1002,6 +1009,11 @@ public class PhotoViewActivity extends FragmentActivity implements
     @Override
     public boolean isScaleAnimationEnabled() {
         return mScaleAnimationEnabled;
+    }
+
+    @Override
+    public boolean isEnterAnimationFinished() {
+        return mEnterAnimationFinished;
     }
 
     @Override
