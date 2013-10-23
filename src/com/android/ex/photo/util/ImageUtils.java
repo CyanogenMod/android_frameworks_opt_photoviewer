@@ -206,9 +206,7 @@ public class ImageUtils {
     private static InputStreamFactory createInputStreamFactory(final ContentResolver resolver,
             final Uri uri) {
         final String scheme = uri.getScheme();
-        if ("http".equals(scheme) || "https".equals(scheme)) {
-            return new HttpInputStreamFactory(resolver, uri);
-        } else if ("data".equals(scheme)) {
+        if ("data".equals(scheme)) {
             return new DataInputStreamFactory(resolver, uri);
         }
         return new BaseInputStreamFactory(resolver, uri);
@@ -278,61 +276,6 @@ public class ImageUtils {
                 Log.e(TAG, "Mailformed data URI: " + ex);
                 return null;
             }
-        }
-    }
-
-    private static class HttpInputStreamFactory extends BaseInputStreamFactory {
-        private byte[] mData;
-
-        public HttpInputStreamFactory(final ContentResolver resolver, final Uri uri) {
-            super(resolver, uri);
-        }
-
-        @Override
-        public InputStream createInputStream() throws FileNotFoundException {
-            if (mData == null) {
-                mData = downloadBytes();
-                if (mData == null) {
-                    return super.createInputStream();
-                }
-            }
-            return new ByteArrayInputStream(mData);
-        }
-
-        private byte[] downloadBytes() throws FileNotFoundException {
-            InputStream is = null;
-            ByteArrayOutputStream out = null;
-            try {
-                try {
-                    is = new URL(mUri.toString()).openStream();
-                } catch (MalformedURLException e) {
-                    return null;
-                }
-                out = new ByteArrayOutputStream();
-                final byte[] buffer = new byte[4096];
-                int n = is.read(buffer);
-                while (n >= 0) {
-                    out.write(buffer, 0, n);
-                    n = is.read(buffer);
-                }
-
-                return out.toByteArray();
-            } catch (IOException ignored) {
-            } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-                if (out != null) {
-                    try {
-                        out.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
-            return null;
         }
     }
 }
