@@ -1,10 +1,9 @@
 package com.android.ex.photo;
 
 import android.os.Build;
-import android.util.Log;
 import android.view.View;
 
-public class PhotoViewController implements View.OnSystemUiVisibilityChangeListener {
+public class PhotoViewController {
 
     private int mLastFlags;
 
@@ -19,8 +18,25 @@ public class PhotoViewController implements View.OnSystemUiVisibilityChangeListe
 
     private final PhotoViewControllerCallbacks mCallback;
 
+    private final View.OnSystemUiVisibilityChangeListener mSystemUiVisibilityChangeListener;
+
     public PhotoViewController(PhotoViewControllerCallbacks callback) {
         mCallback = callback;
+
+        // View.OnSystemUiVisibilityChangeListener is an API that was introduced in API level 11.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            mSystemUiVisibilityChangeListener = null;
+        } else {
+            mSystemUiVisibilityChangeListener = new View.OnSystemUiVisibilityChangeListener() {
+                @Override
+                public void onSystemUiVisibilityChange(int visibility) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
+                            visibility == 0 && mLastFlags == 3846) {
+                        mCallback.setNotFullscreenCallbackDoNotUseThisFunction();
+                    }
+                }
+            };
+        }
     }
 
     public void setImmersiveMode(boolean enabled) {
@@ -91,11 +107,10 @@ public class PhotoViewController implements View.OnSystemUiVisibilityChangeListe
         }
     }
 
-    @Override
-    public void onSystemUiVisibilityChange(int visibility) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT &&
-                visibility == 0 && mLastFlags == 3846) {
-            mCallback.setNotFullscreenCallbackDoNotUseThisFunction();
-        }
+    /**
+     * Note: This should only be called when API level is 11 or above.
+     */
+    public View.OnSystemUiVisibilityChangeListener getSystemUiVisibilityChangeListener() {
+        return mSystemUiVisibilityChangeListener;
     }
 }

@@ -247,7 +247,10 @@ public class PhotoViewActivity extends ActionBarActivity implements
                 createPhotoPagerAdapter(this, getSupportFragmentManager(), null, mMaxInitialScale);
         final Resources resources = getResources();
         mRootView = findViewById(R.id.photo_activity_root_view);
-        mRootView.setOnSystemUiVisibilityChangeListener(mController);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            mRootView.setOnSystemUiVisibilityChangeListener(
+                    mController.getSystemUiVisibilityChangeListener());
+        }
         mBackground = findViewById(R.id.photo_activity_background);
         mTemporaryImage = (ImageView) findViewById(R.id.photo_activity_temporary_image);
         mViewPager = (PhotoViewPager) findViewById(R.id.photo_view_pager);
@@ -999,12 +1002,12 @@ public class PhotoViewActivity extends ActionBarActivity implements
 
     @Override
     public void showActionBar() {
-        getActionBar().show();
+        getSupportActionBar().show();
     }
 
     @Override
     public void hideActionBar() {
-        getActionBar().hide();
+        getSupportActionBar().hide();
     }
 
     @Override
