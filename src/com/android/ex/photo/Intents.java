@@ -199,6 +199,17 @@ public class Intents {
             return this;
         }
 
+        /**
+         * Enable a scale animation that animates the initial photo URI passed in using
+         * {@link #setInitialPhotoUri}.
+         *
+         * Note: To avoid janky transitions, particularly when exiting the photoviewer, ensure the
+         * following system UI flags are set on the root view of the relying app's activity
+         * (via @{link View.setSystemUiVisibility(int)}):
+         *     {@code View.SYSTEM_UI_FLAG_VISIBLE | View.SYSTEM_UI_FLAG_LAYOUT_STABLE}
+         * As well, client should ensure {@code android:fitsSystemWindows} is set on the root
+         * content view.
+         */
         public PhotoViewIntentBuilder setScaleAnimation(int startX, int startY,
                 int startWidth, int startHeight) {
             mScaleAnimation = true;

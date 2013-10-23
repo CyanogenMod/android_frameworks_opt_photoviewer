@@ -42,8 +42,7 @@ public class PhotoViewController {
     public void setImmersiveMode(boolean enabled) {
         int flags = 0;
         final int version = Build.VERSION.SDK_INT;
-        final boolean manuallyUpdateActionBar = version < Build.VERSION_CODES.JELLY_BEAN ||
-                (version < Build.VERSION_CODES.KITKAT && mCallback.isScaleAnimationEnabled());
+        final boolean manuallyUpdateActionBar = version < Build.VERSION_CODES.JELLY_BEAN;
         if (enabled &&
                 (!mCallback.isScaleAnimationEnabled() || mCallback.isEnterAnimationFinished())) {
             // Turning on immersive mode causes an animation. If the scale animation is enabled and
@@ -58,21 +57,15 @@ public class PhotoViewController {
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE;
             } else if (version >= Build.VERSION_CODES.JELLY_BEAN) {
+                // Clients that use the scale animation should set the following system UI flags to
+                // prevent janky animations on exit when the status bar is hidden:
+                //     View.SYSTEM_UI_FLAG_VISIBLE | View.SYSTEM_UI_FLAG_STABLE
+                // As well, client should ensure `android:fitsSystemWindows` is set on the root
+                // content view.
                 flags = View.SYSTEM_UI_FLAG_LOW_PROFILE
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-                if (!mCallback.isScaleAnimationEnabled()) {
-                    // If we are using the scale animation for intro and exit,
-                    // we can't go into fullscreen mode. The issue is that the
-                    // activity that invoked this will not be in fullscreen, so
-                    // as we transition out, the background activity will be
-                    // temporarily rendered without an actionbar, and the shrinking
-                    // photo will not line up properly. After that it redraws
-                    // in the correct location, but it still looks janks.
-                    // FLAG: there may be a better way to fix this, but I don't
-                    // yet know what it is.
-                    flags |= View.SYSTEM_UI_FLAG_FULLSCREEN;
-                }
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN;
             } else if (version >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
                 flags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
             } else if (version >= Build.VERSION_CODES.HONEYCOMB) {
@@ -86,7 +79,7 @@ public class PhotoViewController {
             if (version >= Build.VERSION_CODES.KITKAT) {
                 flags = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;;
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
             } else if (version >= Build.VERSION_CODES.JELLY_BEAN) {
                 flags = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
