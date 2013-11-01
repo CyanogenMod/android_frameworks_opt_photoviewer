@@ -18,6 +18,7 @@
 package com.android.ex.photo.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.support.v4.app.Fragment;
 
@@ -34,11 +35,14 @@ public class PhotoPagerAdapter extends BaseCursorPagerAdapter {
     protected int mThumbnailUriIndex;
     protected int mLoadingIndex;
     protected final float mMaxScale;
+    protected boolean mDisplayThumbsFullScreen;
 
     public PhotoPagerAdapter(
-            Context context, android.support.v4.app.FragmentManager fm, Cursor c, float maxScale) {
+            Context context, android.support.v4.app.FragmentManager fm, Cursor c,
+            float maxScale, boolean thumbsFullScreen) {
         super(context, fm, c);
         mMaxScale = maxScale;
+        mDisplayThumbsFullScreen = thumbsFullScreen;
     }
 
     @Override
@@ -62,6 +66,7 @@ public class PhotoPagerAdapter extends BaseCursorPagerAdapter {
         builder
             .setResolvedPhotoUri(photoUri)
             .setThumbnailUri(thumbnailUri)
+            .setDisplayThumbsFullScreen(mDisplayThumbsFullScreen)
             .setMaxInitialScale(mMaxScale);
 
         return PhotoViewFragment.newInstance(builder.build(), position, onlyShowSpinner);

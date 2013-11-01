@@ -20,6 +20,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
+    <View
+        android:id="@+id/photo_activity_background"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ff000000" />
+
+    <ImageView
+        android:id="@+id/photo_activity_temporary_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
     <com.android.ex.photo.PhotoViewPager
         android:id="@+id/photo_view_pager"
         android:layout_width="match_parent"

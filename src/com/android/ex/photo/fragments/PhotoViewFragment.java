@@ -21,7 +21,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
@@ -40,14 +39,15 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+
 import com.android.ex.photo.Intents;
 import com.android.ex.photo.PhotoViewCallbacks;
 import com.android.ex.photo.PhotoViewCallbacks.CursorChangedListener;
 import com.android.ex.photo.PhotoViewCallbacks.OnScreenListener;
 import com.android.ex.photo.R;
 import com.android.ex.photo.adapters.PhotoPagerAdapter;
-import com.android.ex.photo.loaders.PhotoBitmapLoader;
-import com.android.ex.photo.loaders.PhotoBitmapLoader.BitmapResult;
+import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface.BitmapResult;
+import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface;
 import com.android.ex.photo.util.ImageUtils;
 import com.android.ex.photo.views.PhotoView;
 import com.android.ex.photo.views.ProgressBarWrapper;
@@ -60,6 +60,7 @@ public class PhotoViewFragment extends Fragment implements
         OnClickListener,
         OnScreenListener,
         CursorChangedListener {
+
     /**
      * Interface for components that are internally scrollable left-to-right.
      */
@@ -87,13 +88,9 @@ public class PhotoViewFragment extends Fragment implements
     protected final static String STATE_INTENT_KEY =
             "com.android.mail.photo.fragments.PhotoViewFragment.INTENT";
 
-    private final static String ARG_INTENT = "arg-intent";
-    private final static String ARG_POSITION = "arg-position";
-    private final static String ARG_SHOW_SPINNER = "arg-show-spinner";
-
-    // Loader IDs
-    protected final static int LOADER_ID_PHOTO = 1;
-    protected final static int LOADER_ID_THUMBNAIL = 2;
+    protected final static String ARG_INTENT = "arg-intent";
+    protected final static String ARG_POSITION = "arg-position";
+    protected final static String ARG_SHOW_SPINNER = "arg-show-spinner";
 
     /** The size of the photo */
     public static Integer sPhotoSize;
@@ -106,6 +103,8 @@ public class PhotoViewFragment extends Fragment implements
     protected PhotoViewCallbacks mCallback;
     protected PhotoPagerAdapter mAdapter;
 
+    protected BroadcastReceiver mInternetStateReceiver;
+
     protected PhotoView mPhotoView;
     protected ImageView mPhotoPreviewImage;
     protected TextView mEmptyText;
@@ -116,6 +115,11 @@ public class PhotoViewFragment extends Fragment implements
 
     /** Whether or not the fragment should make the photo full-screen */
     protected boolean mFullScreen;
+
+    /**
+     * True if the PhotoViewFragment should watch the network state in order to restart loaders.
+     */
+    protected boolean mWatchNetworkState;
 
     /** Whether or not this fragment will only show the loading spinner */
     protected boolean mOnlyShowSpinner;
@@ -128,6 +132,9 @@ public class PhotoViewFragment extends Fragment implements
 
     /** Whether or not there is currently a connection to the internet */
     protected boolean mConnected;
+
+    /** Whether or not we can display the thumbnail at fullscreen size */
+    protected boolean mDisplayThumbsFullScreen;
 
     /** Public no-arg constructor for allowing the framework to handle orientation changes */
     public PhotoViewFragment() {
@@ -162,11 +169,6 @@ public class PhotoViewFragment extends Fragment implements
         mAdapter = mCallback.getAdapter();
         if (mAdapter == null) {
             throw new IllegalStateException("Callback reported null adapter");
-        }
-
-        if (hasNetworkStatePermission()) {
-            getActivity().registerReceiver(new InternetStateBroadcastReceiver(),
-                    new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
         }
         // Don't call until we've setup the entire view
         setViewVisibility();
@@ -207,6 +209,9 @@ public class PhotoViewFragment extends Fragment implements
             return;
         }
         mIntent = bundle.getParcelable(ARG_INTENT);
+        mDisplayThumbsFullScreen = mIntent.getBooleanExtra(
+                Intents.EXTRA_DISPLAY_THUMBS_FULLSCREEN, false);
+
         mPosition = bundle.getInt(ARG_POSITION);
         mOnlyShowSpinner = bundle.getBoolean(ARG_SHOW_SPINNER);
         mProgressBarNeeded = true;
@@ -221,6 +226,7 @@ public class PhotoViewFragment extends Fragment implements
         if (mIntent != null) {
             mResolvedPhotoUri = mIntent.getStringExtra(Intents.EXTRA_RESOLVED_PHOTO_URI);
             mThumbnailUri = mIntent.getStringExtra(Intents.EXTRA_THUMBNAIL_URI);
+            mWatchNetworkState = mIntent.getBooleanExtra(Intents.EXTRA_WATCH_NETWORK, false);
         }
     }
 
@@ -249,6 +255,9 @@ public class PhotoViewFragment extends Fragment implements
         mPhotoProgressBar = new ProgressBarWrapper(determinate, indeterminate, true);
         mEmptyText = (TextView) view.findViewById(R.id.empty_text);
         mRetryButton = (ImageView) view.findViewById(R.id.retry_button);
+
+        // Don't call until we've setup the entire view
+        setViewVisibility();
     }
 
     @Override
@@ -257,7 +266,12 @@ public class PhotoViewFragment extends Fragment implements
         mCallback.addScreenListener(mPosition, this);
         mCallback.addCursorListener(this);
 
-        if (hasNetworkStatePermission()) {
+        if (mWatchNetworkState) {
+            if (mInternetStateReceiver == null) {
+                mInternetStateReceiver = new InternetStateBroadcastReceiver();
+            }
+            getActivity().registerReceiver(mInternetStateReceiver,
+                    new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
             ConnectivityManager connectivityManager = (ConnectivityManager)
                     getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
@@ -274,14 +288,23 @@ public class PhotoViewFragment extends Fragment implements
             mProgressBarNeeded = true;
             mPhotoPreviewAndProgress.setVisibility(View.VISIBLE);
 
-            getLoaderManager().initLoader(LOADER_ID_THUMBNAIL, null, this);
-            getLoaderManager().initLoader(LOADER_ID_PHOTO, null, this);
+            getLoaderManager().initLoader(PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL,
+                    null, this);
+
+            // FLAG: If we are displaying thumbnails at fullscreen size, then we
+            // could defer the loading of the fullscreen image until the thumbnail
+            // has finished loading, or even until the user attempts to zoom in.
+            getLoaderManager().initLoader(PhotoViewCallbacks.BITMAP_LOADER_PHOTO,
+                    null, this);
         }
     }
 
     @Override
     public void onPause() {
         // Remove listeners
+        if (mWatchNetworkState) {
+            getActivity().unregisterReceiver(mInternetStateReceiver);
+        }
         mCallback.removeCursorListener(this);
         mCallback.removeScreenListener(mPosition);
         resetPhotoView();
@@ -298,6 +321,10 @@ public class PhotoViewFragment extends Fragment implements
         super.onDestroyView();
     }
 
+    public String getPhotoUri() {
+        return mResolvedPhotoUri;
+    }
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -312,14 +339,16 @@ public class PhotoViewFragment extends Fragment implements
         if(mOnlyShowSpinner) {
             return null;
         }
+        String uri = null;
         switch (id) {
-            case LOADER_ID_PHOTO:
-                return new PhotoBitmapLoader(getActivity(), mResolvedPhotoUri);
-            case LOADER_ID_THUMBNAIL:
-                return new PhotoBitmapLoader(getActivity(), mThumbnailUri);
-            default:
-                return null;
+            case PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL:
+                uri = mThumbnailUri;
+                break;
+            case PhotoViewCallbacks.BITMAP_LOADER_PHOTO:
+                uri = mResolvedPhotoUri;
+                break;
         }
+        return mCallback.onCreateBitmapLoader(id, args, uri);
     }
 
     @Override
@@ -332,37 +361,35 @@ public class PhotoViewFragment extends Fragment implements
 
         final int id = loader.getId();
         switch (id) {
-            case LOADER_ID_THUMBNAIL:
-                if (isPhotoBound()) {
-                    // There is need to do anything with the thumbnail
-                    // image, as the full size image is being shown.
-                    return;
-                }
-
-                if (data == null) {
-                    // no preview, show default
-                    mPhotoPreviewImage.setImageResource(R.drawable.default_image);
-                    mThumbnailShown = false;
+            case PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL:
+                if (mDisplayThumbsFullScreen) {
+                    displayPhoto(result);
                 } else {
-                    // show preview
-                    mPhotoPreviewImage.setImageBitmap(data);
-                    mThumbnailShown = true;
+                    if (isPhotoBound()) {
+                        // There is need to do anything with the thumbnail
+                        // image, as the full size image is being shown.
+                        return;
+                    }
+
+                    if (data == null) {
+                        // no preview, show default
+                        mPhotoPreviewImage.setImageResource(R.drawable.default_image);
+                        mThumbnailShown = false;
+                    } else {
+                        // show preview
+                        mPhotoPreviewImage.setImageBitmap(data);
+                        mThumbnailShown = true;
+                    }
+                    mPhotoPreviewImage.setVisibility(View.VISIBLE);
+                    if (getResources().getBoolean(R.bool.force_thumbnail_no_scaling)) {
+                        mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
+                    }
+                    enableImageTransforms(false);
                 }
-                mPhotoPreviewImage.setVisibility(View.VISIBLE);
-                if (getResources().getBoolean(R.bool.force_thumbnail_no_scaling)) {
-                    mPhotoPreviewImage.setScaleType(ImageView.ScaleType.CENTER);
-                }
-                enableImageTransforms(false);
                 break;
-            case LOADER_ID_PHOTO:
 
-                if (result.status == BitmapResult.STATUS_EXCEPTION) {
-                    mProgressBarNeeded = false;
-                    mEmptyText.setText(R.string.failed);
-                    mEmptyText.setVisibility(View.VISIBLE);
-                } else {
-                    bindPhoto(data);
-                }
+            case PhotoViewCallbacks.BITMAP_LOADER_PHOTO:
+                displayPhoto(result);
                 break;
             default:
                 break;
@@ -379,6 +406,19 @@ public class PhotoViewFragment extends Fragment implements
         setViewVisibility();
     }
 
+    private void displayPhoto(BitmapResult result) {
+        Bitmap data = result.bitmap;
+        if (result.status == BitmapResult.STATUS_EXCEPTION) {
+            mProgressBarNeeded = false;
+            mEmptyText.setText(R.string.failed);
+            mEmptyText.setVisibility(View.VISIBLE);
+            mCallback.onFragmentPhotoLoadComplete(this, false /* success */);
+        } else {
+            bindPhoto(data);
+            mCallback.onFragmentPhotoLoadComplete(this, true /* success */);
+        }
+    }
+
     /**
      * Binds an image to the photo view.
      */
@@ -391,12 +431,6 @@ public class PhotoViewFragment extends Fragment implements
             mPhotoPreviewAndProgress.setVisibility(View.GONE);
             mProgressBarNeeded = false;
         }
-    }
-
-    private boolean hasNetworkStatePermission() {
-        final String networkStatePermission = "android.permission.ACCESS_NETWORK_STATE";
-        int result = getActivity().checkCallingOrSelfPermission(networkStatePermission);
-        return result == PackageManager.PERMISSION_GRANTED;
     }
 
     /**
@@ -439,7 +473,8 @@ public class PhotoViewFragment extends Fragment implements
         } else {
             if (!isPhotoBound()) {
                 // Restart the loader
-                getLoaderManager().restartLoader(LOADER_ID_THUMBNAIL, null, this);
+                getLoaderManager().restartLoader(PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL,
+                        null, this);
             }
             mCallback.onFragmentVisible(this);
         }
@@ -504,13 +539,19 @@ public class PhotoViewFragment extends Fragment implements
             // change.
             return;
         }
+        // FLAG: There is a problem here:
+        // If the cursor changes, and new items are added at an earlier position than
+        // the current item, we will switch photos here. Really we should probably
+        // try to find a photo with the same url and move the cursor to that position.
         if (cursor.moveToPosition(mPosition) && !isPhotoBound()) {
             mCallback.onCursorChanged(this, cursor);
 
             final LoaderManager manager = getLoaderManager();
-            final Loader<BitmapResult> fakePhotoLoader = manager.getLoader(LOADER_ID_PHOTO);
+
+            final Loader<BitmapResult> fakePhotoLoader = manager.getLoader(
+                    PhotoViewCallbacks.BITMAP_LOADER_PHOTO);
             if (fakePhotoLoader != null) {
-                final PhotoBitmapLoader loader = (PhotoBitmapLoader) fakePhotoLoader;
+                final PhotoBitmapLoaderInterface loader = (PhotoBitmapLoaderInterface) fakePhotoLoader;
                 mResolvedPhotoUri = mAdapter.getPhotoUri(cursor);
                 loader.setPhotoUri(mResolvedPhotoUri);
                 loader.forceLoad();
@@ -518,15 +559,19 @@ public class PhotoViewFragment extends Fragment implements
 
             if (!mThumbnailShown) {
                 final Loader<BitmapResult> fakeThumbnailLoader = manager.getLoader(
-                        LOADER_ID_THUMBNAIL);
+                        PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL);
                 if (fakeThumbnailLoader != null) {
-                    final PhotoBitmapLoader loader = (PhotoBitmapLoader) fakeThumbnailLoader;
+                    final PhotoBitmapLoaderInterface loader = (PhotoBitmapLoaderInterface) fakeThumbnailLoader;
                     mThumbnailUri = mAdapter.getThumbnailUri(cursor);
                     loader.setPhotoUri(mThumbnailUri);
                     loader.forceLoad();
                 }
             }
         }
+    }
+
+    public int getPosition() {
+        return mPosition;
     }
 
     public ProgressBarWrapper getPhotoProgressBar() {
@@ -553,16 +598,17 @@ public class PhotoViewFragment extends Fragment implements
             ConnectivityManager connectivityManager = (ConnectivityManager)
                     context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
-            if (activeNetInfo == null) {
+            if (activeNetInfo == null || !activeNetInfo.isConnected()) {
                 mConnected = false;
                 return;
             }
-            if (mConnected == false && activeNetInfo.isConnected() && !isPhotoBound()) {
+            if (mConnected == false && !isPhotoBound()) {
                 if (mThumbnailShown == false) {
-                    getLoaderManager().restartLoader(LOADER_ID_THUMBNAIL, null,
-                            PhotoViewFragment.this);
+                    getLoaderManager().restartLoader(PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL,
+                            null, PhotoViewFragment.this);
                 }
-                getLoaderManager().restartLoader(LOADER_ID_PHOTO, null, PhotoViewFragment.this);
+                getLoaderManager().restartLoader(PhotoViewCallbacks.BITMAP_LOADER_PHOTO,
+                        null, PhotoViewFragment.this);
                 mConnected = true;
                 mPhotoProgressBar.setVisibility(View.VISIBLE);
             }

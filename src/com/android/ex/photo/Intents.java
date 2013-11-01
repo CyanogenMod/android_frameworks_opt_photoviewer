@@ -27,6 +27,7 @@ import com.android.ex.photo.fragments.PhotoViewFragment;
 /**
  * Build intents to start app activities
  */
+
 public class Intents {
     // Intent extras
     public static final String EXTRA_PHOTO_INDEX = "photo_index";
@@ -36,6 +37,19 @@ public class Intents {
     public static final String EXTRA_PROJECTION = "projection";
     public static final String EXTRA_THUMBNAIL_URI = "thumbnail_uri";
     public static final String EXTRA_MAX_INITIAL_SCALE = "max_scale";
+    public static final String EXTRA_WATCH_NETWORK = "watch_network";
+
+
+    // Parameters affecting the intro/exit animation
+    public static final String EXTRA_SCALE_UP_ANIMATION = "scale_up_animation";
+    public static final String EXTRA_ANIMATION_START_X = "start_x_extra";
+    public static final String EXTRA_ANIMATION_START_Y = "start_y_extra";
+    public static final String EXTRA_ANIMATION_START_WIDTH = "start_width_extra";
+    public static final String EXTRA_ANIMATION_START_HEIGHT = "start_height_extra";
+
+    // Parameters affecting the display and features
+    public static final String EXTRA_ACTION_BAR_HIDDEN_INITIALLY = "action_bar_hidden_initially";
+    public static final String EXTRA_DISPLAY_THUMBS_FULLSCREEN = "display_thumbs_fullscreen";
 
     /**
      * Gets a photo view intent builder to display the photos from phone activity.
@@ -71,6 +85,8 @@ public class Intents {
         private Integer mPhotoIndex;
         /** The URI of the initial photo to show */
         private String mInitialPhotoUri;
+        /** The URI of the initial thumbnail to show */
+        private String mInitialThumbnailUri;
         /** The URI of the group of photos to display */
         private String mPhotosUri;
         /** The URL of the photo to display */
@@ -81,9 +97,30 @@ public class Intents {
         private String mThumbnailUri;
         /** The maximum scale to display images at before  */
         private Float mMaxInitialScale;
+        /**
+         * True if the PhotoViewFragments should watch for network changes to restart their loaders
+         */
+        private boolean mWatchNetwork;
+        /** true we want to run the image scale animation */
+        private boolean mScaleAnimation;
+        /** The parameters for performing the scale up/scale down animations
+         * upon enter and exit. StartX and StartY represent the screen coordinates
+         * of the upper left corner of the start rectangle, startWidth and startHeight
+         * represent the width and height of the start rectangle.
+         */
+        private int mStartX;
+        private int mStartY;
+        private int mStartWidth;
+        private int mStartHeight;
+
+        private boolean mActionBarHiddenInitially;
+        private boolean mDisplayFullScreenThumbs;
 
         private PhotoViewIntentBuilder(Context context, Class<?> cls) {
             mIntent = new Intent(context, cls);
+            mScaleAnimation = false;
+            mActionBarHiddenInitially = false;
+            mDisplayFullScreenThumbs = false;
         }
 
         /** Sets the photo index */
@@ -136,6 +173,49 @@ public class Intents {
             return this;
         }
 
+        /**
+         * Enable watching the network for connectivity changes.
+         *
+         * When a change is detected, bitmap loaders will be restarted if required.
+         */
+        public PhotoViewIntentBuilder watchNetworkConnectivityChanges() {
+            mWatchNetwork = true;
+            return this;
+        }
+
+        public PhotoViewIntentBuilder setScaleAnimation(int startX, int startY,
+                int startWidth, int startHeight) {
+            mScaleAnimation = true;
+            mStartX = startX;
+            mStartY = startY;
+            mStartWidth = startWidth;
+            mStartHeight = startHeight;
+            return this;
+        }
+
+        // If this option is turned on, then the photoViewer will be initially
+        // displayed with the action bar hidden. This is as opposed to the default
+        // behavior, where the actionBar is initially shown.
+        public PhotoViewIntentBuilder setActionBarHiddenInitially(
+                boolean actionBarHiddenInitially) {
+            mActionBarHiddenInitially = actionBarHiddenInitially;
+            return this;
+        }
+
+        // If this option is turned on, then the small, lo-res thumbnail will
+        // be scaled up to the maximum size to cover as much of the screen as
+        // possible while still maintaining the correct aspect ratio. This means
+        // that the image may appear blurry until the the full-res image is
+        // loaded.
+        // This is as opposed to the default behavior, where only part of the
+        // thumbnail is displayed in a small view in the center of the screen,
+        // and a loading spinner is displayed until the full-res image is loaded.
+        public PhotoViewIntentBuilder setDisplayThumbsFullScreen(
+                boolean displayFullScreenThumbs) {
+            mDisplayFullScreenThumbs = displayFullScreenThumbs;
+            return this;
+        }
+
         /** Build the intent */
         public Intent build() {
             mIntent.setAction(Intent.ACTION_VIEW);
@@ -174,6 +254,21 @@ public class Intents {
             if (mMaxInitialScale != null) {
                 mIntent.putExtra(EXTRA_MAX_INITIAL_SCALE, mMaxInitialScale);
             }
+
+            if (mWatchNetwork == true) {
+                mIntent.putExtra(EXTRA_WATCH_NETWORK, true);
+            }
+
+            mIntent.putExtra(EXTRA_SCALE_UP_ANIMATION, mScaleAnimation);
+            if (mScaleAnimation) {
+                mIntent.putExtra(EXTRA_ANIMATION_START_X, mStartX);
+                mIntent.putExtra(EXTRA_ANIMATION_START_Y, mStartY);
+                mIntent.putExtra(EXTRA_ANIMATION_START_WIDTH, mStartWidth);
+                mIntent.putExtra(EXTRA_ANIMATION_START_HEIGHT, mStartHeight);
+            }
+
+            mIntent.putExtra(EXTRA_ACTION_BAR_HIDDEN_INITIALLY, mActionBarHiddenInitially);
+            mIntent.putExtra(EXTRA_DISPLAY_THUMBS_FULLSCREEN, mDisplayFullScreenThumbs);
 
             return mIntent;
         }

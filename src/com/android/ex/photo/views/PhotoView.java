@@ -28,12 +28,14 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.view.GestureDetectorCompat;
+import android.support.v4.view.ScaleGestureDetectorCompat;
 import android.util.AttributeSet;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewConfiguration;
 
 import com.android.ex.photo.R;
 import com.android.ex.photo.fragments.PhotoViewFragment.HorizontallyScrollable;
@@ -58,6 +60,12 @@ public class PhotoView extends View implements OnGestureListener,
     private final static float SNAP_THRESHOLD = 20.0f;
     /** The width & height of the bitmap returned by {@link #getCroppedPhoto()} */
     private final static float CROPPED_SIZE = 256.0f;
+
+    /**
+     * Touch slop used to determine if this double tap is valid for starting a scale or should be
+     * ignored.
+     */
+    private static int sTouchSlopSquare;
 
     /** If {@code true}, the static values have been initialized */
     private static boolean sInitialized;
@@ -154,6 +162,24 @@ public class PhotoView extends View implements OnGestureListener,
     /** Array to store a copy of the matrix values */
     private float[] mValues = new float[9];
 
+    /**
+     * Track whether a double tap event occurred.
+     */
+    private boolean mDoubleTapOccurred;
+
+    /**
+     * X and Y coordinates for the current down event. Since mDoubleTapOccurred only contains the
+     * information that there was a double tap event, use these to get the secondary tap
+     * information to determine if a user has moved beyond touch slop.
+     */
+    private float mDownFocusX;
+    private float mDownFocusY;
+
+    /**
+     * Whether the QuickSale gesture is enabled.
+     */
+    private boolean mQuickScaleEnabled;
+
     public PhotoView(Context context) {
         super(context);
         initialize();
@@ -194,7 +220,48 @@ public class PhotoView extends View implements OnGestureListener,
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        if (mDoubleTapToZoomEnabled && mTransformsEnabled) {
+        mDoubleTapOccurred = true;
+        if (!mQuickScaleEnabled) {
+            return scale(e);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+        final int action = e.getAction();
+        boolean handled = false;
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                if (mQuickScaleEnabled) {
+                    mDownFocusX = e.getX();
+                    mDownFocusY = e.getY();
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                if (mQuickScaleEnabled) {
+                    handled = scale(e);
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mQuickScaleEnabled && mDoubleTapOccurred) {
+                    final int deltaX = (int) (e.getX() - mDownFocusX);
+                    final int deltaY = (int) (e.getY() - mDownFocusY);
+                    int distance = (deltaX * deltaX) + (deltaY * deltaY);
+                    if (distance > sTouchSlopSquare) {
+                        mDoubleTapOccurred = false;
+                    }
+                }
+                break;
+
+        }
+        return handled;
+    }
+
+    private boolean scale(MotionEvent e) {
+        boolean handled = false;
+        if (mDoubleTapToZoomEnabled && mTransformsEnabled && mDoubleTapOccurred) {
             if (!mDoubleTapDebounce) {
                 float currentScale = getScale();
                 float targetScale = currentScale * DOUBLE_TAP_SCALE_FACTOR;
@@ -204,15 +271,12 @@ public class PhotoView extends View implements OnGestureListener,
                 targetScale = Math.min(mMaxScale, targetScale);
 
                 mScaleRunnable.start(currentScale, targetScale, e.getX(), e.getY());
+                handled = true;
             }
             mDoubleTapDebounce = false;
         }
-        return true;
-    }
-
-    @Override
-    public boolean onDoubleTapEvent(MotionEvent e) {
-        return true;
+        mDoubleTapOccurred = false;
+        return handled;
     }
 
     @Override
@@ -379,6 +443,7 @@ public class PhotoView extends View implements OnGestureListener,
         mRotateRunnable = null;
         setOnClickListener(null);
         mExternalClickListener = null;
+        mDoubleTapOccurred = false;
     }
 
     /**
@@ -933,10 +998,15 @@ public class PhotoView extends View implements OnGestureListener,
             sCropPaint.setColor(resources.getColor(R.color.photo_crop_highlight_color));
             sCropPaint.setStyle(Style.STROKE);
             sCropPaint.setStrokeWidth(resources.getDimension(R.dimen.photo_crop_stroke_width));
+
+            final ViewConfiguration configuration = ViewConfiguration.get(context);
+            final int touchSlop = configuration.getScaledTouchSlop();
+            sTouchSlopSquare = touchSlop * touchSlop;
         }
 
         mGestureDetector = new GestureDetectorCompat(context, this, null);
         mScaleGetureDetector = new ScaleGestureDetector(context, this);
+        mQuickScaleEnabled = ScaleGestureDetectorCompat.isQuickScaleEnabled(mScaleGetureDetector);
         mScaleRunnable = new ScaleRunnable(this);
         mTranslateRunnable = new TranslateRunnable(this);
         mSnapRunnable = new SnapRunnable(this);
