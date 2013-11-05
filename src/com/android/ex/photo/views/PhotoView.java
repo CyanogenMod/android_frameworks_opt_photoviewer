@@ -448,6 +448,7 @@ public class PhotoView extends View implements OnGestureListener,
     }
 
     public void bindDrawable(Drawable drawable) {
+        boolean changed = false;
         if (drawable != null && drawable != mDrawable) {
             // Clear previous state.
             if (mDrawable != null) {
@@ -462,9 +463,11 @@ public class PhotoView extends View implements OnGestureListener,
             // Set a callback?
             mDrawable.setCallback(this);
 
-            configureBounds(true);
-            invalidate();
+            changed = true;
         }
+
+        configureBounds(changed);
+        invalidate();
     }
 
     /**
