@@ -352,11 +352,14 @@ public class PhotoViewFragment extends Fragment implements
 
     @Override
     public void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
-        Drawable data = result.getDrawable(getResources());
         // If we don't have a view, the fragment has been paused. We'll get the cursor again later.
-        if (getView() == null) {
+        // If we're not added, the fragment has detached during the loading process. We no longer
+        // need the result.
+        if (getView() == null || !isAdded()) {
             return;
         }
+
+        Drawable data = result.getDrawable(getResources());
 
         final int id = loader.getId();
         switch (id) {
@@ -406,13 +409,13 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     private void displayPhoto(BitmapResult result) {
-        Drawable data = result.getDrawable(getResources());
         if (result.status == BitmapResult.STATUS_EXCEPTION) {
             mProgressBarNeeded = false;
             mEmptyText.setText(R.string.failed);
             mEmptyText.setVisibility(View.VISIBLE);
             mCallback.onFragmentPhotoLoadComplete(this, false /* success */);
         } else {
+            Drawable data = result.getDrawable(getResources());
             bindPhoto(data);
             mCallback.onFragmentPhotoLoadComplete(this, true /* success */);
         }
