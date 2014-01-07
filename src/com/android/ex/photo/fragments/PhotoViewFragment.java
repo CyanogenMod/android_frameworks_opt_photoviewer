@@ -359,7 +359,7 @@ public class PhotoViewFragment extends Fragment implements
             return;
         }
 
-        Drawable data = result.getDrawable(getResources());
+        final Drawable data = result.getDrawable(getResources());
 
         final int id = loader.getId();
         switch (id) {
@@ -415,7 +415,7 @@ public class PhotoViewFragment extends Fragment implements
             mEmptyText.setVisibility(View.VISIBLE);
             mCallback.onFragmentPhotoLoadComplete(this, false /* success */);
         } else {
-            Drawable data = result.getDrawable(getResources());
+            final Drawable data = result.getDrawable(getResources());
             bindPhoto(data);
             mCallback.onFragmentPhotoLoadComplete(this, true /* success */);
         }
