@@ -472,6 +472,11 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
+    public void onViewUpNext() {
+        resetViews();
+    }
+
+    @Override
     public void onViewActivated() {
         if (!mCallback.isFragmentActive(this)) {
             // we're not in the foreground; reset our view
