@@ -135,6 +135,9 @@ public class PhotoViewActivity extends ActionBarActivity implements
     private final Set<CursorChangedListener> mCursorListeners = new HashSet<CursorChangedListener>();
     /** When {@code true}, restart the loader when the activity becomes active */
     private boolean mKickLoader;
+    /** Don't attempt operations that may trigger a fragment transaction when the activity is
+     * destroyed */
+    private boolean mIsDestroyedCompat;
     /** Whether or not this activity is paused */
     protected boolean mIsPaused = true;
     /** The maximum scale factor applied to images when they are initially displayed */
@@ -320,6 +323,16 @@ public class PhotoViewActivity extends ActionBarActivity implements
     }
 
     @Override
+    protected void onDestroy() {
+        mIsDestroyedCompat = true;
+        super.onDestroy();
+    }
+
+    private boolean isDestroyedCompat() {
+        return mIsDestroyedCompat;
+    }
+
+    @Override
     public void onBackPressed() {
         // If we are in fullscreen mode, and the default is not full screen, then
         // switch back to actionBar display mode.
@@ -500,7 +513,7 @@ public class PhotoViewActivity extends ActionBarActivity implements
     @Override
     public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
         // If the loader is reset, remove the reference in the adapter to this cursor
-        if (!isDestroyed()) {
+        if (!isDestroyedCompat()) {
             // This will cause a fragment transaction which can't happen if we're destroyed,
             // but we don't care in that case because we're destroyed anyways.
             mAdapter.swapCursor(null);
