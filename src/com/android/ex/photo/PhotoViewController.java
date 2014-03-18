@@ -1,6 +1,7 @@
 package com.android.ex.photo;
 
 import android.os.Build;
+import android.os.Process;
 import android.view.View;
 
 public class PhotoViewController {
@@ -49,7 +50,10 @@ public class PhotoViewController {
             // the enter animation isn't yet complete, then an immersive mode animation should not
             // occur, since two concurrent animations are very janky.
 
-            if (version >= Build.VERSION_CODES.KITKAT) {
+            // Disable immersive mode for seconary users to prevent b/12015090 (freezing crash)
+            // This is fixed in KK_MR2 but there is no way to differentiate between  KK and KK_MR2.
+            if (version > Build.VERSION_CODES.KITKAT ||
+                    version == Build.VERSION_CODES.KITKAT && !kitkatIsSecondaryUser()) {
                 flags = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -98,6 +102,18 @@ public class PhotoViewController {
             mLastFlags = flags;
             mCallback.getRootView().setSystemUiVisibility(flags);
         }
+    }
+
+    /**
+     * Return true iff the app is being run as a secondary user on kitkat.
+     *
+     * This is a hack which we only know to work on kitkat.
+     */
+    private boolean kitkatIsSecondaryUser() {
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.KITKAT) {
+            throw new IllegalStateException("kitkatIsSecondary user is only callable on KitKat");
+        }
+        return Process.myUid() > 100000;
     }
 
     /**
