@@ -149,7 +149,9 @@ public class ImageUtils {
             // Determine the orientation for this image
             is = factory.createInputStream();
             final int orientation = Exif.getOrientation(is, -1);
-            is.close();
+            if (is != null) {
+                is.close();
+            }
 
             // Decode the bitmap
             is = factory.createInputStream();
