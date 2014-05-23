@@ -518,6 +518,16 @@ public class PhotoViewActivity extends FragmentActivity implements
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+        if (positionOffset < 0.0001) {
+            OnScreenListener before = mScreenListeners.get(position - 1);
+            if (before != null) {
+                before.onViewUpNext();
+            }
+            OnScreenListener after = mScreenListeners.get(position + 1);
+            if (after != null) {
+                after.onViewUpNext();
+            }
+        }
     }
 
     @Override
