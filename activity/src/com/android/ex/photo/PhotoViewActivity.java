@@ -132,7 +132,7 @@ public class PhotoViewActivity extends FragmentActivity implements
     /** The set of listeners wanting full screen state */
     private final Set<CursorChangedListener> mCursorListeners = new HashSet<CursorChangedListener>();
     /** When {@code true}, restart the loader when the activity becomes active */
-    private boolean mRestartLoader;
+    private boolean mKickLoader;
     /** Whether or not this activity is paused */
     protected boolean mIsPaused = true;
     /** The maximum scale factor applied to images when they are initially displayed */
@@ -306,9 +306,9 @@ public class PhotoViewActivity extends FragmentActivity implements
         setFullScreen(mFullScreen, false);
 
         mIsPaused = false;
-        if (mRestartLoader) {
-            mRestartLoader = false;
-            getSupportLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
+        if (mKickLoader) {
+            mKickLoader = false;
+            getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
         }
     }
 
@@ -432,6 +432,7 @@ public class PhotoViewActivity extends FragmentActivity implements
         if (id == LOADER_PHOTO_LIST) {
             if (data == null || data.getCount() == 0) {
                 mIsEmpty = true;
+                mAdapter.swapCursor(null);
             } else {
                 mAlbumCount = data.getCount();
                 if (mCurrentPhotoUri != null) {
@@ -464,10 +465,9 @@ public class PhotoViewActivity extends FragmentActivity implements
 
                 // We're paused; don't do anything now, we'll get re-invoked
                 // when the activity becomes active again
-                // TODO(pwestbro): This shouldn't be necessary, as the loader manager should
-                // restart the loader
                 if (mIsPaused) {
-                    mRestartLoader = true;
+                    mKickLoader = true;
+                    mAdapter.swapCursor(null);
                     return;
                 }
                 boolean wasEmpty = mIsEmpty;
@@ -497,8 +497,11 @@ public class PhotoViewActivity extends FragmentActivity implements
     @Override
     public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
         // If the loader is reset, remove the reference in the adapter to this cursor
-        // TODO(pwestbro): reenable this when b/7075236 is fixed
-        // mAdapter.swapCursor(null);
+        if (!isDestroyed()) {
+            // This will cause a fragment transaction which can't happen if we're destroyed,
+            // but we don't care in that case because we're destroyed anyways.
+            mAdapter.swapCursor(null);
+        }
     }
 
     protected void updateActionItems() {
