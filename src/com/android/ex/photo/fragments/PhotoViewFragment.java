@@ -43,6 +43,7 @@ import com.android.ex.photo.Intents;
 import com.android.ex.photo.PhotoViewCallbacks;
 import com.android.ex.photo.PhotoViewCallbacks.CursorChangedListener;
 import com.android.ex.photo.PhotoViewCallbacks.OnScreenListener;
+import com.android.ex.photo.PhotoViewController.ActivityInterface;
 import com.android.ex.photo.R;
 import com.android.ex.photo.adapters.PhotoPagerAdapter;
 import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface;
@@ -148,19 +149,24 @@ public class PhotoViewFragment extends Fragment implements
      */
     public static PhotoViewFragment newInstance(
             Intent intent, int position, boolean onlyShowSpinner) {
+        final PhotoViewFragment f = new PhotoViewFragment();
+        initializeArguments(intent, position, onlyShowSpinner, f);
+        return f;
+    }
+
+    public static void initializeArguments(
+            Intent intent, int position, boolean onlyShowSpinner, PhotoViewFragment f) {
         final Bundle b = new Bundle();
         b.putParcelable(ARG_INTENT, intent);
         b.putInt(ARG_POSITION, position);
         b.putBoolean(ARG_SHOW_SPINNER, onlyShowSpinner);
-        final PhotoViewFragment f = new PhotoViewFragment();
         f.setArguments(b);
-        return f;
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mCallback = (PhotoViewCallbacks) getActivity();
+        mCallback = getCallbacks();
         if (mCallback == null) {
             throw new IllegalArgumentException(
                     "Activity must be a derived class of PhotoViewActivity");
@@ -171,6 +177,10 @@ public class PhotoViewFragment extends Fragment implements
         }
         // Don't call until we've setup the entire view
         setViewVisibility();
+    }
+
+    protected PhotoViewCallbacks getCallbacks() {
+        return ((ActivityInterface) getActivity()).getController();
     }
 
     @Override
