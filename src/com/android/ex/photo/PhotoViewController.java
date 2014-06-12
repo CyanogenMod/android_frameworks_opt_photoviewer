@@ -19,6 +19,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
@@ -207,6 +208,10 @@ public class PhotoViewController implements
         return new PhotoPagerAdapter(context, fm, c, maxScale, mDisplayThumbsFullScreen);
     }
 
+    public PhotoViewController.ActivityInterface getActivity() {
+        return mActivity;
+    }
+
     public void onCreate(Bundle savedInstanceState) {
 
         final ActivityManager mgr = (ActivityManager) mActivity.getApplicationContext().
@@ -329,9 +334,21 @@ public class PhotoViewController implements
         }
     }
 
-    public View findViewById(int id) {
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return true;
+    }
+
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return true;
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {}
+
+    protected View findViewById(int id) {
         return mActivity.findViewById(id);
     }
+
+    public void onStart() {}
 
     public void onResume() {
         setFullScreen(mFullScreen, false);
@@ -346,6 +363,8 @@ public class PhotoViewController implements
     public void onPause() {
         mIsPaused = true;
     }
+
+    public void onStop() {}
 
     public void onDestroy() {
         mIsDestroyedCompat = true;

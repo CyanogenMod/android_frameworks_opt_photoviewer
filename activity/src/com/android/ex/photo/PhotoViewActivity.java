@@ -18,8 +18,10 @@
 package com.android.ex.photo;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.Menu;
 import android.view.MenuItem;
 
 /**
@@ -48,6 +50,12 @@ public class PhotoViewActivity extends FragmentActivity
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        mController.onStart();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         mController.onResume();
@@ -57,6 +65,12 @@ public class PhotoViewActivity extends FragmentActivity
     protected void onPause() {
         mController.onPause();
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        mController.onStop();
+        super.onStop();
     }
 
     @Override
@@ -79,9 +93,24 @@ public class PhotoViewActivity extends FragmentActivity
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return mController.onCreateOptionsMenu(menu) || super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return mController.onPrepareOptionsMenu(menu) || super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return mController.onOptionsItemSelected(item) ||
-                super.onOptionsItemSelected(item);
+        return mController.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mController.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
