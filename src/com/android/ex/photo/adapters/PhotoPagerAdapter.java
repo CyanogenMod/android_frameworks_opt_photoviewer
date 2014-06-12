@@ -62,14 +62,23 @@ public class PhotoPagerAdapter extends BaseCursorPagerAdapter {
 
         // create new PhotoViewFragment
         final PhotoViewIntentBuilder builder =
-                Intents.newPhotoViewFragmentIntentBuilder(mContext);
+                Intents.newPhotoViewFragmentIntentBuilder(mContext, getPhotoViewFragmentClass());
         builder
             .setResolvedPhotoUri(photoUri)
             .setThumbnailUri(thumbnailUri)
             .setDisplayThumbsFullScreen(mDisplayThumbsFullScreen)
             .setMaxInitialScale(mMaxScale);
 
-        return PhotoViewFragment.newInstance(builder.build(), position, onlyShowSpinner);
+        return createPhotoViewFragment(builder.build(), position, onlyShowSpinner);
+    }
+
+    protected Class<? extends PhotoViewFragment> getPhotoViewFragmentClass() {
+        return PhotoViewFragment.class;
+    }
+
+    protected PhotoViewFragment createPhotoViewFragment(
+            Intent intent, int position, boolean onlyShowSpinner) {
+        return PhotoViewFragment.newInstance(intent, position, onlyShowSpinner);
     }
 
     @Override

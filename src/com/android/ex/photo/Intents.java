@@ -68,7 +68,20 @@ public class Intents {
      * @return The intent builder
      */
     public static PhotoViewIntentBuilder newPhotoViewFragmentIntentBuilder(Context context) {
-        return new PhotoViewIntentBuilder(context, PhotoViewFragment.class);
+        return newPhotoViewFragmentIntentBuilder(context, PhotoViewFragment.class);
+    }
+
+    /**
+     * Gets a photo view intent builder to display the photo view fragment with a custom fragment
+     * subclass.
+     *
+     * @param context The context
+     * @param clazz Subclass of PhotoViewFragment to use
+     * @return The intent builder
+     */
+    public static PhotoViewIntentBuilder newPhotoViewFragmentIntentBuilder(Context context,
+            Class<? extends PhotoViewFragment> clazz) {
+        return new PhotoViewIntentBuilder(context, clazz);
     }
 
     /** Gets a new photo view intent builder */
