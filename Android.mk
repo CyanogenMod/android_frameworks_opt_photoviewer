@@ -69,7 +69,7 @@ LOCAL_MODULE := libphotoviewer_appcompat
 LOCAL_STATIC_JAVA_LIBRARIES := libphotoviewer_appcompat_dynamic \
     android-support-v4 android-support-v7-appcompat
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 LOCAL_SOURCE_FILES_ALL_GENERATED := true
 
 LOCAL_RESOURCE_DIR := $(addprefix $(LOCAL_PATH)/, $(appcompat_res_dirs))
@@ -85,7 +85,7 @@ LOCAL_MODULE := libphotoviewer
 
 LOCAL_STATIC_JAVA_LIBRARIES := libphotoviewer_dynamic android-support-v4
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 LOCAL_SOURCE_FILES_ALL_GENERATED := true
 
 LOCAL_RESOURCE_DIR := $(addprefix $(LOCAL_PATH)/, $(activity_res_dirs))
