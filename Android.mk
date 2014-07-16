@@ -19,7 +19,7 @@ LOCAL_PATH := $(call my-dir)
 # This is to allow the library to be loaded dynamically in a context where
 # the required libraries already exist. You should only use this library
 # if you're certain that you need it; see go/extradex-design for more context.
-appcompat_res_dirs := appcompat/res res ../../support/v7/appcompat/res
+appcompat_res_dirs := appcompat/res res ../../../prebuilts/sdk/current/support/v7/appcompat/res
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libphotoviewer_appcompat_dynamic
@@ -27,7 +27,7 @@ LOCAL_MODULE := libphotoviewer_appcompat_dynamic
 LOCAL_JAVA_LIBRARIES := android-support-v4 \
     android-support-v7-appcompat
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 LOCAL_SRC_FILES := \
      $(call all-java-files-under, src) \
      $(call all-java-files-under, appcompat/src) \
@@ -48,7 +48,7 @@ LOCAL_MODULE := libphotoviewer_dynamic
 
 LOCAL_JAVA_LIBRARIES := android-support-v4
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 LOCAL_SRC_FILES := \
      $(call all-java-files-under, src) \
      $(call all-java-files-under, activity/src) \
@@ -69,7 +69,7 @@ LOCAL_MODULE := libphotoviewer_appcompat
 LOCAL_STATIC_JAVA_LIBRARIES := libphotoviewer_appcompat_dynamic \
     android-support-v4 android-support-v7-appcompat
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 LOCAL_SOURCE_FILES_ALL_GENERATED := true
 
 LOCAL_RESOURCE_DIR := $(addprefix $(LOCAL_PATH)/, $(appcompat_res_dirs))
@@ -85,7 +85,7 @@ LOCAL_MODULE := libphotoviewer
 
 LOCAL_STATIC_JAVA_LIBRARIES := libphotoviewer_dynamic android-support-v4
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 LOCAL_SOURCE_FILES_ALL_GENERATED := true
 
 LOCAL_RESOURCE_DIR := $(addprefix $(LOCAL_PATH)/, $(activity_res_dirs))

@@ -27,7 +27,7 @@ LOCAL_PACKAGE_NAME := PhotoViewerSample
 
 LOCAL_STATIC_JAVA_LIBRARIES += libphotoviewer
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 
 LOCAL_SRC_FILES := $(call all-java-files-under, $(src_dirs)) \
         $(call all-logtags-files-under, $(src_dirs))
@@ -41,7 +41,7 @@ include $(BUILD_PACKAGE)
 
 #Include res dir from photoviewer
 photo_dir := ../res ../appcompat/res
-res_dirs := $(photo_dir) res ../../../support/v7/appcompat/res
+res_dirs := $(photo_dir) res ../../../../prebuilts/sdk/current/support/v7/appcompat/res
 
 # Build APK
 include $(CLEAR_VARS)
@@ -51,7 +51,7 @@ LOCAL_PACKAGE_NAME := AppcompatPhotoViewerSample
 
 LOCAL_STATIC_JAVA_LIBRARIES += libphotoviewer_appcompat
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := current
 
 LOCAL_SRC_FILES := $(call all-java-files-under, $(src_dirs)) \
         $(call all-logtags-files-under, $(src_dirs))
