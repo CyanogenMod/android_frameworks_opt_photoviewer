@@ -41,7 +41,7 @@ include $(BUILD_PACKAGE)
 
 #Include res dir from photoviewer
 photo_dir := ../res ../appcompat/res
-res_dirs := $(photo_dir) res ../../../support/v7/appcompat/res
+res_dirs := $(photo_dir) res ../../../../prebuilts/sdk/current/support/v7/appcompat/res
 
 # Build APK
 include $(CLEAR_VARS)
