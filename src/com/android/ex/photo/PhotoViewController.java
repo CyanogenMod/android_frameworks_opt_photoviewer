@@ -479,7 +479,6 @@ public class PhotoViewController implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
         final int id = loader.getId();
         if (id == LOADER_PHOTO_LIST) {
             if (data == null || data.getCount() == 0) {
@@ -499,6 +498,8 @@ public class PhotoViewController implements
                         currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
                                 .query(null).build();
                     }
+                    // Rewind data cursor to the start if it has already advanced.
+                    data.moveToPosition(-1);
                     while (data.moveToNext()) {
                         final String uriString = data.getString(uriIndex);
                         final Uri uri;
