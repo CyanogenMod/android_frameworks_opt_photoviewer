@@ -31,6 +31,8 @@ public interface ActionBarInterface {
      */
     public void setDisplayOptionsShowTitle();
 
+    public CharSequence getTitle();
+
     public void setTitle(CharSequence title);
 
     public void setSubtitle(CharSequence subtitle);
