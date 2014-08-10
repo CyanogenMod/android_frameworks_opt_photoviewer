@@ -45,6 +45,11 @@ public class ActionBarWrapper implements ActionBarInterface {
     }
 
     @Override
+    public CharSequence getTitle() {
+       return mActionBar.getTitle();
+    }
+
+    @Override
     public void setTitle(CharSequence title) {
         mActionBar.setTitle(title);
     }
