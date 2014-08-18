@@ -54,11 +54,6 @@ import com.android.ex.photo.views.ProgressBarWrapper;
 
 /**
  * Displays a photo.
- *
- * Note: there is generally no reason to subclass this fragment. If you are using
- * PhotoViewActivity (either directly, or subclassing it) you should not subclass this. You only
- * need to subclass this if your activity does not implement {@link ActivityInterface} directly, in
- * which case you should only override {@link #getCallbacks()}.
  */
 public class PhotoViewFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<BitmapResult>,
@@ -90,56 +85,56 @@ public class PhotoViewFragment extends Fragment implements
         public boolean interceptMoveRight(float origX, float origY);
     }
 
-    private final static String STATE_INTENT_KEY =
+    protected final static String STATE_INTENT_KEY =
             "com.android.mail.photo.fragments.PhotoViewFragment.INTENT";
 
-    private final static String ARG_INTENT = "arg-intent";
-    private final static String ARG_POSITION = "arg-position";
-    private final static String ARG_SHOW_SPINNER = "arg-show-spinner";
+    protected final static String ARG_INTENT = "arg-intent";
+    protected final static String ARG_POSITION = "arg-position";
+    protected final static String ARG_SHOW_SPINNER = "arg-show-spinner";
 
     /** The size of the photo */
     public static Integer sPhotoSize;
 
     /** The URL of a photo to display */
-    private String mResolvedPhotoUri;
-    private String mThumbnailUri;
+    protected String mResolvedPhotoUri;
+    protected String mThumbnailUri;
     /** The intent we were launched with */
-    private Intent mIntent;
-    private PhotoViewCallbacks mCallback;
-    private PhotoPagerAdapter mAdapter;
+    protected Intent mIntent;
+    protected PhotoViewCallbacks mCallback;
+    protected PhotoPagerAdapter mAdapter;
 
-    private BroadcastReceiver mInternetStateReceiver;
+    protected BroadcastReceiver mInternetStateReceiver;
 
-    private PhotoView mPhotoView;
-    private ImageView mPhotoPreviewImage;
-    private TextView mEmptyText;
-    private ImageView mRetryButton;
-    private ProgressBarWrapper mPhotoProgressBar;
+    protected PhotoView mPhotoView;
+    protected ImageView mPhotoPreviewImage;
+    protected TextView mEmptyText;
+    protected ImageView mRetryButton;
+    protected ProgressBarWrapper mPhotoProgressBar;
 
-    private int mPosition;
+    protected int mPosition;
 
     /** Whether or not the fragment should make the photo full-screen */
-    private boolean mFullScreen;
+    protected boolean mFullScreen;
 
     /**
      * True if the PhotoViewFragment should watch the network state in order to restart loaders.
      */
-    private boolean mWatchNetworkState;
+    protected boolean mWatchNetworkState;
 
     /** Whether or not this fragment will only show the loading spinner */
-    private boolean mOnlyShowSpinner;
+    protected boolean mOnlyShowSpinner;
 
     /** Whether or not the progress bar is showing valid information about the progress stated */
-    private boolean mProgressBarNeeded = true;
+    protected boolean mProgressBarNeeded = true;
 
-    private View mPhotoPreviewAndProgress;
-    private boolean mThumbnailShown;
+    protected View mPhotoPreviewAndProgress;
+    protected boolean mThumbnailShown;
 
     /** Whether or not there is currently a connection to the internet */
-    private boolean mConnected;
+    protected boolean mConnected;
 
     /** Whether or not we can display the thumbnail at fullscreen size */
-    private boolean mDisplayThumbsFullScreen;
+    protected boolean mDisplayThumbsFullScreen;
 
     /** Public no-arg constructor for allowing the framework to handle orientation changes */
     public PhotoViewFragment() {
@@ -189,13 +184,13 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final void onDetach() {
+    public void onDetach() {
         mCallback = null;
         super.onDetach();
     }
 
     @Override
-    public final void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (sPhotoSize == null) {
             final DisplayMetrics metrics = new DisplayMetrics();
@@ -245,14 +240,14 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.photo_fragment_view, container, false);
         initializeView(view);
         return view;
     }
 
-    private void initializeView(View view) {
+    protected void initializeView(View view) {
         mPhotoView = (PhotoView) view.findViewById(R.id.photo_view);
         mPhotoView.setMaxInitialScale(mIntent.getFloatExtra(Intents.EXTRA_MAX_INITIAL_SCALE, 1));
         mPhotoView.setOnClickListener(this);
@@ -275,7 +270,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final void onResume() {
+    public void onResume() {
         super.onResume();
         mCallback.addScreenListener(mPosition, this);
         mCallback.addCursorListener(this);
@@ -314,7 +309,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final void onPause() {
+    public void onPause() {
         // Remove listeners
         if (mWatchNetworkState) {
             getActivity().unregisterReceiver(mInternetStateReceiver);
@@ -326,7 +321,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final void onDestroyView() {
+    public void onDestroyView() {
         // Clean up views and other components
         if (mPhotoView != null) {
             mPhotoView.clear();
@@ -335,12 +330,12 @@ public class PhotoViewFragment extends Fragment implements
         super.onDestroyView();
     }
 
-    public final String getPhotoUri() {
+    public String getPhotoUri() {
         return mResolvedPhotoUri;
     }
 
     @Override
-    public final void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
         if (mIntent != null) {
@@ -349,7 +344,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final Loader<BitmapResult> onCreateLoader(int id, Bundle args) {
+    public Loader<BitmapResult> onCreateLoader(int id, Bundle args) {
         if(mOnlyShowSpinner) {
             return null;
         }
@@ -366,7 +361,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
+    public void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
         // If we don't have a view, the fragment has been paused. We'll get the cursor again later.
         // If we're not added, the fragment has detached during the loading process. We no longer
         // need the result.
@@ -450,7 +445,7 @@ public class PhotoViewFragment extends Fragment implements
         }
     }
 
-    public final Drawable getDrawable() {
+    public Drawable getDrawable() {
         return (mPhotoView != null ? mPhotoView.getDrawable() : null);
     }
 
@@ -458,7 +453,7 @@ public class PhotoViewFragment extends Fragment implements
      * Enable or disable image transformations. When transformations are enabled, this view
      * consumes all touch events.
      */
-    public final void enableImageTransforms(boolean enable) {
+    public void enableImageTransforms(boolean enable) {
         mPhotoView.enableImageTransforms(enable);
     }
 
@@ -472,27 +467,27 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final void onLoaderReset(Loader<BitmapResult> loader) {
+    public void onLoaderReset(Loader<BitmapResult> loader) {
         // Do nothing
     }
 
     @Override
-    public final void onClick(View v) {
+    public void onClick(View v) {
         mCallback.toggleFullScreen();
     }
 
     @Override
-    public final void onFullScreenChanged(boolean fullScreen) {
+    public void onFullScreenChanged(boolean fullScreen) {
         setViewVisibility();
     }
 
     @Override
-    public final void onViewUpNext() {
+    public void onViewUpNext() {
         resetViews();
     }
 
     @Override
-    public final void onViewActivated() {
+    public void onViewActivated() {
         if (!mCallback.isFragmentActive(this)) {
             // we're not in the foreground; reset our view
             resetViews();
@@ -509,14 +504,14 @@ public class PhotoViewFragment extends Fragment implements
     /**
      * Reset the views to their default states
      */
-    public final void resetViews() {
+    public void resetViews() {
         if (mPhotoView != null) {
             mPhotoView.resetTransformations();
         }
     }
 
     @Override
-    public final boolean onInterceptMoveLeft(float origX, float origY) {
+    public boolean onInterceptMoveLeft(float origX, float origY) {
         if (!mCallback.isFragmentActive(this)) {
             // we're not in the foreground; don't intercept any touches
             return false;
@@ -526,7 +521,7 @@ public class PhotoViewFragment extends Fragment implements
     }
 
     @Override
-    public final boolean onInterceptMoveRight(float origX, float origY) {
+    public boolean onInterceptMoveRight(float origX, float origY) {
         if (!mCallback.isFragmentActive(this)) {
             // we're not in the foreground; don't intercept any touches
             return false;
@@ -538,7 +533,7 @@ public class PhotoViewFragment extends Fragment implements
     /**
      * Returns {@code true} if a photo has been bound. Otherwise, returns {@code false}.
      */
-    public final boolean isPhotoBound() {
+    public boolean isPhotoBound() {
         return (mPhotoView != null && mPhotoView.isPhotoBound());
     }
 
@@ -553,12 +548,12 @@ public class PhotoViewFragment extends Fragment implements
     /**
      * Sets full-screen mode for the views.
      */
-    public final void setFullScreen(boolean fullScreen) {
+    public void setFullScreen(boolean fullScreen) {
         mFullScreen = fullScreen;
     }
 
     @Override
-    public final void onCursorChanged(Cursor cursor) {
+    public void onCursorChanged(Cursor cursor) {
         if (mAdapter == null) {
             // The adapter is set in onAttach(), and is guaranteed to be non-null. We have magically
             // received an onCursorChanged without attaching to an activity. Ignore this cursor
@@ -596,23 +591,23 @@ public class PhotoViewFragment extends Fragment implements
         }
     }
 
-    public final int getPosition() {
+    public int getPosition() {
         return mPosition;
     }
 
-    public final ProgressBarWrapper getPhotoProgressBar() {
+    public ProgressBarWrapper getPhotoProgressBar() {
         return mPhotoProgressBar;
     }
 
-    public final TextView getEmptyText() {
+    public TextView getEmptyText() {
         return mEmptyText;
     }
 
-    public final ImageView getRetryButton() {
+    public ImageView getRetryButton() {
         return mRetryButton;
     }
 
-    public final boolean isProgressBarNeeded() {
+    public boolean isProgressBarNeeded() {
         return mProgressBarNeeded;
     }
 
