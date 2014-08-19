@@ -18,11 +18,13 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
+import android.view.WindowManager;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -41,6 +43,7 @@ import com.android.ex.photo.loaders.PhotoBitmapLoader;
 import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface.BitmapResult;
 import com.android.ex.photo.loaders.PhotoPagerLoader;
 import com.android.ex.photo.provider.PhotoContract;
+import com.android.ex.photo.util.ImageUtils;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,7 +114,7 @@ public class PhotoViewController implements
     public static final String KEY_MESSAGE = "dialog_message";
 
     public static int sMemoryClass;
-
+    public static int sMaxPhotoSize; // The maximum size (either width or height)
 
     private final ActivityInterface mActivity;
 
@@ -213,7 +216,7 @@ public class PhotoViewController implements
     }
 
     public void onCreate(Bundle savedInstanceState) {
-
+        initMaxPhotoSize();
         final ActivityManager mgr = (ActivityManager) mActivity.getApplicationContext().
                 getSystemService(Activity.ACTIVITY_SERVICE);
         sMemoryClass = mgr.getMemoryClass();
@@ -331,6 +334,29 @@ public class PhotoViewController implements
             // Keep lights out mode as false. This is to prevent jank cause by concurrent
             // animations during the enter animation.
             setLightsOutMode(false);
+        }
+    }
+
+    private void initMaxPhotoSize() {
+        if (sMaxPhotoSize == 0) {
+            final DisplayMetrics metrics = new DisplayMetrics();
+            final WindowManager wm = (WindowManager)
+                    mActivity.getContext().getSystemService(Context.WINDOW_SERVICE);
+            final ImageUtils.ImageSize imageSize = ImageUtils.sUseImageSize;
+            wm.getDefaultDisplay().getMetrics(metrics);
+            switch (imageSize) {
+                case EXTRA_SMALL:
+                    // Use a photo that's 80% of the "small" size
+                    sMaxPhotoSize = (Math.min(metrics.heightPixels, metrics.widthPixels) * 800) / 1000;
+                    break;
+                case SMALL:
+                    // Fall through.
+                case NORMAL:
+                    // Fall through.
+                default:
+                    sMaxPhotoSize = Math.min(metrics.heightPixels, metrics.widthPixels);
+                    break;
+            }
         }
     }
 
