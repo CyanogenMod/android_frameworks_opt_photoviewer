@@ -1308,10 +1308,10 @@ public class PhotoView extends View implements OnGestureListener,
             } else {
                 transX = (mTranslateX / (SNAP_DURATION - delta)) * 10f;
                 transY = (mTranslateY / (SNAP_DURATION - delta)) * 10f;
-                if (Math.abs(transX) > Math.abs(mTranslateX) || transX == Float.NaN) {
+                if (Math.abs(transX) > Math.abs(mTranslateX) || Float.isNaN(transX)) {
                     transX = mTranslateX;
                 }
-                if (Math.abs(transY) > Math.abs(mTranslateY) || transY == Float.NaN) {
+                if (Math.abs(transY) > Math.abs(mTranslateY) || Float.isNaN(transY)) {
                     transY = mTranslateY;
                 }
             }
