@@ -48,7 +48,7 @@ public class PhotoView extends View implements OnGestureListener,
         OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener,
         HorizontallyScrollable {
     /** Zoom animation duration; in milliseconds */
-    private final static long ZOOM_ANIMATION_DURATION = 300L;
+    private final static long ZOOM_ANIMATION_DURATION = 200L;
     /** Rotate animation duration; in milliseconds */
     private final static long ROTATE_ANIMATION_DURATION = 500L;
     /** Snap animation duration; in milliseconds */
@@ -56,7 +56,7 @@ public class PhotoView extends View implements OnGestureListener,
     /** Amount of time to wait before starting snap animation; in milliseconds */
     private static final long SNAP_DELAY = 250L;
     /** By how much to scale the image when double click occurs */
-    private final static float DOUBLE_TAP_SCALE_FACTOR = 1.5f;
+    private final static float DOUBLE_TAP_SCALE_FACTOR = 2.0f;
     /** Amount of translation needed before starting a snap animation */
     private final static float SNAP_THRESHOLD = 20.0f;
     /** The width & height of the bitmap returned by {@link #getCroppedPhoto()} */
@@ -265,13 +265,42 @@ public class PhotoView extends View implements OnGestureListener,
         if (mDoubleTapToZoomEnabled && mTransformsEnabled && mDoubleTapOccurred) {
             if (!mDoubleTapDebounce) {
                 float currentScale = getScale();
-                float targetScale = currentScale * DOUBLE_TAP_SCALE_FACTOR;
+                float targetScale;
+                float centerX, centerY;
 
-                // Ensure the target scale is within our bounds
-                targetScale = Math.max(mMinScale, targetScale);
-                targetScale = Math.min(mMaxScale, targetScale);
+                // Zoom out if not default scale, otherwise zoom in
+                if (currentScale > mMinScale) {
+                    targetScale = mMinScale;
+                    float relativeScale = targetScale / currentScale;
+                    // Find the apparent origin for scaling that equals this scale and translate
+                    centerX = (getWidth() / 2 - relativeScale * mTranslateRect.centerX()) /
+                            (1 - relativeScale);
+                    centerY = (getHeight() / 2 - relativeScale * mTranslateRect.centerY()) /
+                            (1 - relativeScale);
+                } else {
+                     targetScale = currentScale * DOUBLE_TAP_SCALE_FACTOR;
+                     // Ensure the target scale is within our bounds
+                     targetScale = Math.max(mMinScale, targetScale);
+                     targetScale = Math.min(mMaxScale, targetScale);
+                     float relativeScale = targetScale / currentScale;
+                     float widthBuffer = (getWidth() - mTranslateRect.width()) / relativeScale;
+                     float heightBuffer = (getHeight() - mTranslateRect.height()) / relativeScale;
+                     // Clamp the center if it would result in uneven borders
+                     if (mTranslateRect.width() <= widthBuffer * 2) {
+                         centerX = mTranslateRect.centerX();
+                     } else {
+                         centerX = Math.min(Math.max(mTranslateRect.left + widthBuffer,
+                                 e.getX()), mTranslateRect.right - widthBuffer);
+                     }
+                     if (mTranslateRect.height() <= heightBuffer * 2) {
+                         centerY = mTranslateRect.centerY();
+                     } else {
+                         centerY = Math.min(Math.max(mTranslateRect.top + heightBuffer,
+                                 e.getY()), mTranslateRect.bottom - heightBuffer);
+                     }
+                }
 
-                mScaleRunnable.start(currentScale, targetScale, e.getX(), e.getY());
+                mScaleRunnable.start(currentScale, targetScale, centerX, centerY);
                 handled = true;
             }
             mDoubleTapDebounce = false;
@@ -865,8 +894,7 @@ public class PhotoView extends View implements OnGestureListener,
      * The given scale is capped so that the resulting scale of the image always remains
      * between {@link #mMinScale} and {@link #mMaxScale}.
      *
-     * The scaled image is never allowed to be outside of the viewable area. If the image
-     * is smaller than the viewable area, it will be centered.
+     * If the image is smaller than the viewable area, it will be centered.
      *
      * @param newScale the new scale
      * @param centerX the center horizontal point around which to scale
@@ -885,9 +913,6 @@ public class PhotoView extends View implements OnGestureListener,
 
         // apply the scale factor
         mMatrix.postScale(factor, factor, centerX, centerY);
-
-        // ensure the image is within the view bounds
-        snap();
 
         // re-apply any rotation
         mMatrix.postRotate(mRotation, getWidth() / 2, getHeight() / 2);
