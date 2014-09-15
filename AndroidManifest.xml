@@ -20,5 +20,5 @@
     android:versionCode="1">
 
     <uses-sdk
-        android:targetSdkVersion="19" android:minSdkVersion="8"/>
+        android:targetSdkVersion="21" android:minSdkVersion="8"/>
 </manifest>
