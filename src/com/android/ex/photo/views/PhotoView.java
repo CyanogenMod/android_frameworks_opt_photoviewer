@@ -47,6 +47,12 @@ import com.android.ex.photo.fragments.PhotoViewFragment.HorizontallyScrollable;
 public class PhotoView extends View implements OnGestureListener,
         OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener,
         HorizontallyScrollable {
+
+    public static final int TRANSLATE_NONE = 0;
+    public static final int TRANSLATE_X_ONLY = 1;
+    public static final int TRANSLATE_Y_ONLY = 2;
+    public static final int TRANSLATE_BOTH = 3;
+
     /** Zoom animation duration; in milliseconds */
     private final static long ZOOM_ANIMATION_DURATION = 200L;
     /** Rotate animation duration; in milliseconds */
@@ -927,10 +933,10 @@ public class PhotoView extends View implements OnGestureListener,
      *
      * @param tx how many pixels to translate horizontally
      * @param ty how many pixels to translate vertically
-     * @return {@code true} if the translation was applied as specified. Otherwise, {@code false}
-     *      if the translation was modified.
+     * @return result of the translation, represented as either {@link TRANSLATE_NONE},
+     * {@link TRANSLATE_X_ONLY}, {@link TRANSLATE_Y_ONLY}, or {@link TRANSLATE_BOTH}
      */
-    private boolean translate(float tx, float ty) {
+    private int translate(float tx, float ty) {
         mTranslateRect.set(mTempSrc);
         mMatrix.mapRect(mTranslateRect);
 
@@ -977,7 +983,16 @@ public class PhotoView extends View implements OnGestureListener,
         mMatrix.postTranslate(translateX, translateY);
         invalidate();
 
-        return (translateX == tx) && (translateY == ty);
+        boolean didTranslateX = translateX == tx;
+        boolean didTranslateY = translateY == ty;
+        if (didTranslateX && didTranslateY) {
+            return TRANSLATE_BOTH;
+        } else if (didTranslateX) {
+            return TRANSLATE_X_ONLY;
+        } else if (didTranslateY) {
+            return TRANSLATE_Y_ONLY;
+        }
+        return TRANSLATE_NONE;
     }
 
     /**
@@ -1181,6 +1196,9 @@ public class PhotoView extends View implements OnGestureListener,
         private float mVelocityX;
         private float mVelocityY;
 
+        private float mDecelerationX;
+        private float mDecelerationY;
+
         private long mLastRunTime;
         private boolean mRunning;
         private boolean mStop;
@@ -1200,6 +1218,11 @@ public class PhotoView extends View implements OnGestureListener,
             mLastRunTime = NEVER;
             mVelocityX = velocityX;
             mVelocityY = velocityY;
+
+            float angle = (float) Math.atan2(mVelocityY, mVelocityX);
+            mDecelerationX = (float) (DECELERATION_RATE * Math.cos(angle));
+            mDecelerationY = (float) (DECELERATION_RATE * Math.sin(angle));
+
             mStop = false;
             mRunning = true;
             mHeader.post(this);
@@ -1224,37 +1247,35 @@ public class PhotoView extends View implements OnGestureListener,
             // Translate according to current velocities and time delta:
             long now = System.currentTimeMillis();
             float delta = (mLastRunTime != NEVER) ? (now - mLastRunTime) / 1000f : 0f;
-            final boolean didTranslate = mHeader.translate(mVelocityX * delta, mVelocityY * delta);
+            final int translateResult = mHeader.translate(mVelocityX * delta, mVelocityY * delta);
             mLastRunTime = now;
             // Slow down:
-            float slowDown = DECELERATION_RATE * delta;
-            if (mVelocityX > 0f) {
-                mVelocityX -= slowDown;
-                if (mVelocityX < 0f) {
-                    mVelocityX = 0f;
-                }
+            float slowDownX = mDecelerationX * delta;
+            if (Math.abs(mVelocityX) > Math.abs(slowDownX)) {
+                mVelocityX -= slowDownX;
             } else {
-                mVelocityX += slowDown;
-                if (mVelocityX > 0f) {
-                    mVelocityX = 0f;
-                }
+                mVelocityX = 0f;
             }
-            if (mVelocityY > 0f) {
-                mVelocityY -= slowDown;
-                if (mVelocityY < 0f) {
-                    mVelocityY = 0f;
-                }
+            float slowDownY = mDecelerationY * delta;
+            if (Math.abs(mVelocityY) > Math.abs(slowDownY)) {
+                mVelocityY -= slowDownY;
             } else {
-                mVelocityY += slowDown;
-                if (mVelocityY > 0f) {
-                    mVelocityY = 0f;
-                }
+                mVelocityY = 0f;
             }
 
             // Stop when done
-            if ((mVelocityX == 0f && mVelocityY == 0f) || !didTranslate) {
+            if ((mVelocityX == 0f && mVelocityY == 0f)
+                    || translateResult == TRANSLATE_NONE) {
                 stop();
                 mHeader.snap();
+            } else if (translateResult == TRANSLATE_X_ONLY) {
+                mDecelerationX = (mVelocityX > 0) ? DECELERATION_RATE : -DECELERATION_RATE;
+                mDecelerationY = 0;
+                mVelocityY = 0f;
+            } else if (translateResult == TRANSLATE_Y_ONLY) {
+                mDecelerationX = 0;
+                mDecelerationY = (mVelocityY > 0) ? DECELERATION_RATE : -DECELERATION_RATE;
+                mVelocityX = 0f;
             }
 
             // See if we need to continue flinging:
