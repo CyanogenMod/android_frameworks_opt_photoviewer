@@ -19,6 +19,8 @@
 <resources>
     <style name="PhotoViewTheme" parent="Theme.AppCompat">
         <item name="actionBarStyle">@style/AppCompat.ActionBar</item>
+        <item name="colorPrimaryDark">@color/photo_status_bar_black</item>
+        <item name="android:navigationBarColor">@color/photo_status_bar_black</item>
         <item name="windowActionBarOverlay">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowBackground">@color/solid_black</item>

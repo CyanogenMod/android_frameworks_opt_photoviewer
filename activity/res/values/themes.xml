@@ -18,6 +18,8 @@
 
 <resources>
     <style name="PhotoViewTheme" parent="android:Theme.Holo">
+        <item name="android:colorPrimaryDark">@color/photo_status_bar_black</item>
+        <item name="android:navigationBarColor">@color/photo_status_bar_black</item>
         <item name="android:windowNoTitle">false</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBarOverlay">true</item>
