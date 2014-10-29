@@ -87,6 +87,8 @@ public class PhotoViewController implements
 
     private final static String TAG = "PhotoViewController";
 
+    private final static String STATE_INITIAL_URI_KEY =
+            "com.android.ex.PhotoViewFragment.INITIAL_URI";
     private final static String STATE_CURRENT_URI_KEY =
             "com.android.ex.PhotoViewFragment.CURRENT_URI";
     private final static String STATE_CURRENT_INDEX_KEY =
@@ -124,6 +126,8 @@ public class PhotoViewController implements
 
     /** The URI of the photos we're viewing; may be {@code null} */
     private String mPhotosUri;
+    /** The uri of the initial photo */
+    private String mInitialPhotoUri;
     /** The index of the currently viewed photo */
     private int mCurrentPhotoIndex;
     /** The uri of the currently viewed photo */
@@ -261,11 +265,13 @@ public class PhotoViewController implements
             mCurrentPhotoIndex = intent.getIntExtra(Intents.EXTRA_PHOTO_INDEX, -1);
         }
         if (intent.hasExtra(Intents.EXTRA_INITIAL_PHOTO_URI)) {
-            mCurrentPhotoUri = intent.getStringExtra(Intents.EXTRA_INITIAL_PHOTO_URI);
+            mInitialPhotoUri = intent.getStringExtra(Intents.EXTRA_INITIAL_PHOTO_URI);
+            mCurrentPhotoUri = mInitialPhotoUri;
         }
         mIsEmpty = true;
 
         if (savedInstanceState != null) {
+            mInitialPhotoUri = savedInstanceState.getString(STATE_INITIAL_URI_KEY);
             mCurrentPhotoUri = savedInstanceState.getString(STATE_CURRENT_URI_KEY);
             mCurrentPhotoIndex = savedInstanceState.getInt(STATE_CURRENT_INDEX_KEY);
             mFullScreen = savedInstanceState.getBoolean(STATE_FULLSCREEN_KEY, false);
@@ -310,7 +316,7 @@ public class PhotoViewController implements
             // make our temporary image invisible and display the ViewPager.
             mViewPager.setVisibility(View.GONE);
             Bundle args = new Bundle();
-            args.putString(ARG_IMAGE_URI, mCurrentPhotoUri);
+            args.putString(ARG_IMAGE_URI, mInitialPhotoUri);
             mActivity.getSupportLoaderManager().initLoader(
                     BITMAP_LOADER_THUMBNAIL, args, mBitmapCallback);
         }
@@ -416,6 +422,7 @@ public class PhotoViewController implements
     }
 
     public void onSaveInstanceState(Bundle outState) {
+        outState.putString(STATE_INITIAL_URI_KEY, mInitialPhotoUri);
         outState.putString(STATE_CURRENT_URI_KEY, mCurrentPhotoUri);
         outState.putInt(STATE_CURRENT_INDEX_KEY, mCurrentPhotoIndex);
         outState.putBoolean(STATE_FULLSCREEN_KEY, mFullScreen);
@@ -833,6 +840,8 @@ public class PhotoViewController implements
                 mTemporaryImage.setVisibility(View.GONE);
                 mViewPager.setVisibility(View.VISIBLE);
             }
+            mActivity.getSupportLoaderManager().destroyLoader(
+                    PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL);
         }
     }
 
@@ -988,6 +997,11 @@ public class PhotoViewController implements
                     .translationX(translateX).translationY(translateY)
                     .setDuration(EXIT_ANIMATION_DURATION_MS);
             }
+            // If the user has swiped to a different photo, fade out the current photo
+            // along with the scale animation.
+            if (!mInitialPhotoUri.equals(mCurrentPhotoUri)) {
+                animator.alpha(0f);
+            }
             if (version >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
                 animator.withEndAction(endRunnable);
             } else {
@@ -1134,10 +1148,6 @@ public class PhotoViewController implements
                     // We just loaded the initial thumbnail that we can display
                     // while waiting for the full viewPager to get initialized.
                     initTemporaryImage(drawable);
-                    // Destroy the loader so we don't attempt to load the thumbnail
-                    // again on screen rotations.
-                    mActivity.getSupportLoaderManager().destroyLoader(
-                            PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL);
                     break;
                 case PhotoViewCallbacks.BITMAP_LOADER_AVATAR:
                     if (drawable == null) {
