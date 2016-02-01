@@ -1,14 +1,8 @@
-apply plugin: 'com.android.library'
+apply plugin: 'dist'
 
-android {
-    sourceSets.main {
-        manifest.srcFile 'AndroidManifest.xml'
-        java.srcDirs = ['src', 'appcompat/src']
-        res.srcDirs = ['res', 'appcompat/res']
-    }
+ext {
+    deps = [':support-v4': project(':support-v4'),
+            'support-appcompat-v7': project(':support-appcompat-v7')]
 }
 
-dependencies {
-    compile project(':support-v4')
-    compile project(':support-appcompat-v7')
-}
+apply from: 'rules.gradle'
