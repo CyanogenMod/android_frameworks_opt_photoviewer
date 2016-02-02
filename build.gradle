@@ -1,7 +1,7 @@
 apply plugin: 'dist'
 
 ext {
-    deps = [':support-v4': project(':support-v4'),
+    deps = ['support-v4': project(':support-v4'),
             'support-appcompat-v7': project(':support-appcompat-v7')]
 }
 
