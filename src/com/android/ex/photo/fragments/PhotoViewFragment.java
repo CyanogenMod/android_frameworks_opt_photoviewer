@@ -290,7 +290,6 @@ public class PhotoViewFragment extends Fragment implements
         }
         mCallback.removeCursorListener(this);
         mCallback.removeScreenListener(mPosition);
-        resetPhotoView();
         super.onPause();
     }
 
@@ -430,15 +429,6 @@ public class PhotoViewFragment extends Fragment implements
      */
     public void enableImageTransforms(boolean enable) {
         mPhotoView.enableImageTransforms(enable);
-    }
-
-    /**
-     * Resets the photo view to it's default state w/ no bound photo.
-     */
-    private void resetPhotoView() {
-        if (mPhotoView != null) {
-            mPhotoView.bindPhoto(null);
-        }
     }
 
     @Override
