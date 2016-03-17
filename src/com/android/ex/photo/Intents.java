@@ -37,6 +37,7 @@ public class Intents {
     public static final String EXTRA_RESOLVED_PHOTO_URI = "resolved_photo_uri";
     public static final String EXTRA_PROJECTION = "projection";
     public static final String EXTRA_THUMBNAIL_URI = "thumbnail_uri";
+    public static final String EXTRA_CONTENT_DESCRIPTION = "content_description";
     public static final String EXTRA_MAX_INITIAL_SCALE = "max_scale";
     public static final String EXTRA_WATCH_NETWORK = "watch_network";
     public static final String EXTRA_ENABLE_TIMER_LIGHTS_OUT = "enable_timer_lights_out";
@@ -116,6 +117,8 @@ public class Intents {
         private String[] mProjection;
         /** The URI of a thumbnail of the photo to display */
         private String mThumbnailUri;
+        /** The content Description for the photo to show */
+        private String mContentDescription;
         /** The maximum scale to display images at before  */
         private Float mMaxInitialScale;
         /** True if lights out should automatically be invoked on a timer basis */
@@ -202,6 +205,14 @@ public class Intents {
          */
         public PhotoViewIntentBuilder setThumbnailUri(String thumbnailUri) {
             mThumbnailUri = thumbnailUri;
+            return this;
+        }
+
+        /**
+         * Sets the content Description for the photo
+         */
+        public PhotoViewIntentBuilder setContentDescription(String contentDescription) {
+            mContentDescription = contentDescription;
             return this;
         }
 
@@ -311,6 +322,10 @@ public class Intents {
 
             if (mThumbnailUri != null) {
                 mIntent.putExtra(EXTRA_THUMBNAIL_URI, mThumbnailUri);
+            }
+
+            if (mContentDescription != null) {
+                mIntent.putExtra(EXTRA_CONTENT_DESCRIPTION, mContentDescription);
             }
 
             if (mMaxInitialScale != null) {
