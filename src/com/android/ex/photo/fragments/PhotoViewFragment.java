@@ -92,6 +92,7 @@ public class PhotoViewFragment extends Fragment implements
     /** The URL of a photo to display */
     protected String mResolvedPhotoUri;
     protected String mThumbnailUri;
+    protected String mContentDescription;
     /** The intent we were launched with */
     protected Intent mIntent;
     protected PhotoViewCallbacks mCallback;
@@ -209,6 +210,7 @@ public class PhotoViewFragment extends Fragment implements
         if (mIntent != null) {
             mResolvedPhotoUri = mIntent.getStringExtra(Intents.EXTRA_RESOLVED_PHOTO_URI);
             mThumbnailUri = mIntent.getStringExtra(Intents.EXTRA_THUMBNAIL_URI);
+            mContentDescription = mIntent.getStringExtra(Intents.EXTRA_CONTENT_DESCRIPTION);
             mWatchNetworkState = mIntent.getBooleanExtra(Intents.EXTRA_WATCH_NETWORK, false);
         }
     }
@@ -227,6 +229,7 @@ public class PhotoViewFragment extends Fragment implements
         mPhotoView.setOnClickListener(this);
         mPhotoView.setFullScreen(mFullScreen, false);
         mPhotoView.enableImageTransforms(false);
+        mPhotoView.setContentDescription(mContentDescription);
 
         mPhotoPreviewAndProgress = view.findViewById(R.id.photo_preview);
         mPhotoPreviewImage = (ImageView) view.findViewById(R.id.photo_preview_image);
