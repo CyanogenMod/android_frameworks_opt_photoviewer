@@ -201,7 +201,7 @@ public class PhotoViewController implements
     // text.
     private long mEnterFullScreenDelayTime;
 
-    private boolean isTitleAnnounced;
+    private int lastAnnouncedTitle = -1;
 
     public PhotoViewController(ActivityInterface activity) {
         mActivity = activity;
@@ -809,11 +809,11 @@ public class PhotoViewController implements
         int uriIndex = cursor.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
         mCurrentPhotoUri = cursor.getString(uriIndex);
         updateActionBar();
-        if (mAccessibilityManager.isEnabled() && isTitleAnnounced == false) {
+        if (mAccessibilityManager.isEnabled() && lastAnnouncedTitle != position) {
             String announcement = getPhotoAccessibilityAnnouncement(position);
             if (announcement != null) {
                 Util.announceForAccessibility(mRootView, mAccessibilityManager, announcement);
-                isTitleAnnounced = true;
+                lastAnnouncedTitle = position;
             }
         }
 
